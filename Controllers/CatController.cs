@@ -28,6 +28,7 @@ namespace Knowledge.Controllers
 
     
         [HttpGet("{partitionKey}/{id}")]
+        //[ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
         public async Task<IActionResult> GetCatsUpTheTree(string partitionKey, string id)
         {
             try

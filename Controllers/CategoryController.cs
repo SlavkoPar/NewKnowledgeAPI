@@ -8,6 +8,8 @@ using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using System.ComponentModel.DataAnnotations;
 using Knowledge.Services;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.Identity.Web.Resource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -15,6 +17,9 @@ namespace Knowledge.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+    //[RequiredScope(RequiredScopesConfigurationKey = "AzureAd:Scopes")]
+
     public class CategoryController : ControllerBase
     {
         private readonly IConfiguration Configuration;
@@ -30,7 +35,7 @@ namespace Knowledge.Controllers
 
         // GET api/<FamilyController>
         [HttpGet]
-        [EnableCors("AllowAllOrigins")]
+        //[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)] //, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
         public async Task<IActionResult> GetAllCategories()
         {
             try
@@ -61,6 +66,8 @@ namespace Knowledge.Controllers
         }
 
         [HttpGet("{partitionKey}/{parentCategory}")]
+        //[ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory" })]
+
         public async Task<IActionResult> GetSubCategories(string partitionKey, string parentCategory)
         {
             try
