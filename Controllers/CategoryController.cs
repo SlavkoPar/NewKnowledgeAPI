@@ -40,6 +40,7 @@ namespace Knowledge.Controllers
         {
             try
             {
+                Console.WriteLine("GetAllCategories");
                 //using (var db = new Db(this.Configuration))
                 //{
                 //    await db.Initialize;
@@ -66,12 +67,12 @@ namespace Knowledge.Controllers
         }
 
         [HttpGet("{partitionKey}/{parentCategory}")]
-        //[ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory" })]
-
+        //[ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory" }
         public async Task<IActionResult> GetSubCategories(string partitionKey, string parentCategory)
         {
             try
             {
+                Console.WriteLine("GetSubCategories", partitionKey, parentCategory); 
                 //using (var db = new Db(this.Configuration))
                 //{
                 //    await db.Initialize;

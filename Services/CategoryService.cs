@@ -62,7 +62,8 @@ namespace Knowledge.Services
         internal async Task<List<Category>> GetSubCategories(string partitionKey, string parentCategory)
         {
             var myContainer = await container();
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND IS_NULL(c.Archived) AND " + (
+            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND IS_NULL(c.Archived) AND " 
+            + (
                 partitionKey == "null"
                     ? $""
                     : $" c.partitionKey = '{partitionKey}' AND "

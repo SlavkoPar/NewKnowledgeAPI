@@ -6,6 +6,7 @@ using System.Configuration;
 using Newtonsoft.Json;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using Knowledge.Services;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -13,6 +14,8 @@ namespace Knowledge.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
+
     public class QuestionController : ControllerBase
     {
         private readonly IConfiguration Configuration;
@@ -66,6 +69,7 @@ namespace Knowledge.Controllers
         [HttpGet("{filter}/{count}/{nesto}")]
         public async Task<IActionResult> GetQuests(string filter, int count, string nesto)
         {
+            Console.WriteLine("GetQuests", filter, count, nesto);
             try
             {
                 var words = filter //.ToLower()

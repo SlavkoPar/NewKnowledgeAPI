@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using System.ComponentModel.DataAnnotations;
 using Knowledge.Services;
+using Microsoft.AspNetCore.Authorization;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -14,6 +15,7 @@ namespace Knowledge.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class CatController : ControllerBase
     {
         private readonly IConfiguration Configuration;

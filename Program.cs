@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Logging;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins"; // TODO ubaci u controller
 
@@ -57,7 +58,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 //                      });
 //});
 
-builder.Services.AddControllers();
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    options.JsonSerializerOptions.PropertyNamingPolicy = null;
+});
 
 builder.Services.AddCors(o => o.AddPolicy("default", builder =>
 {
@@ -65,8 +69,6 @@ builder.Services.AddCors(o => o.AddPolicy("default", builder =>
            .AllowAnyMethod()
            .AllowAnyHeader();
 }));
-
-
 
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -114,6 +116,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
     app.UseDeveloperExceptionPage();
+    IdentityModelEventSource.ShowPII = true;
 }
 else
 {
