@@ -48,7 +48,7 @@ namespace Knowledge.Model
             //        .ToList();
             Kind = categoryData.kind;
             ParentCategory = categoryData.parentCategory;
-            Level = 1;
+            Level = (int)categoryData.level;
             Variations = categoryData.variations ?? [];
             NumOfQuestions = categoryData.questions == null ? 0 : categoryData.questions.Count;
             HasSubCategories = categoryData.categories != null && categoryData.categories.Count > 0;

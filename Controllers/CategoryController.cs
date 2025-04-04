@@ -10,6 +10,7 @@ using Knowledge.Services;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web.Resource;
+using System.ComponentModel;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -35,7 +36,7 @@ namespace Knowledge.Controllers
 
         // GET api/<FamilyController>
         [HttpGet]
-        //[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any)] //, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any)] //, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
         public async Task<IActionResult> GetAllCategories()
         {
             try
@@ -67,7 +68,7 @@ namespace Knowledge.Controllers
         }
 
         [HttpGet("{partitionKey}/{parentCategory}")]
-        //[ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory" }
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory" })]
         public async Task<IActionResult> GetSubCategories(string partitionKey, string parentCategory)
         {
             try
@@ -80,7 +81,6 @@ namespace Knowledge.Controllers
                 //List<Category> subCategories = await category.GetSubCategories(partitionKey, parentCategory);
                 var categoryService = new CategoryService(dbService);
                 List<Category> subCategories = await categoryService.GetSubCategories(partitionKey, parentCategory);
-
                 if (subCategories != null)
                 {
                     List<CategoryDto> list = [];
@@ -101,30 +101,29 @@ namespace Knowledge.Controllers
 
 
         [HttpGet("{partitionKey}/{id}/{pageSize}/{includeQuestionId}")]
+        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id", "pageSize", "includeQuestionId" })]
         public async Task<IActionResult> GetCategory(string partitionKey, string id, int pageSize, string includeQuestionId)
         {
             try
             {
+                Console.WriteLine("GetCategory: {0}, {1}, {2}, {3} \n", partitionKey, id, pageSize, includeQuestionId);
+
                 // TODO 1. ovo 2. what does  /partitionKey mean?
                 //using(var db = new Db(this.Configuration))
                 //{
                 //    await db.Initialize;
-                    // TODO Question.Db = db;
-                    //var category = new Category(_Db);
-                    // var container = await Db.GetContainer(this.containerId);
-                    //Category cat = await category.GetCategory(
-                    //    partitionKey, id, true, pageSize, includeQuestionId=="null" ? null : includeQuestionId);
+                // TODO Question.Db = db;
+                //var category = new Category(_Db);
+                // var container = await Db.GetContainer(this.containerId);
+                //Category cat = await category.GetCategory(
+                //    partitionKey, id, true, pageSize, includeQuestionId=="null" ? null : includeQuestionId);
                 var categoryService = new CategoryService(dbService);
                 Category cat = await categoryService.GetCategory(
                        partitionKey, id, true, pageSize, includeQuestionId == "null" ? null : includeQuestionId);
                 if (cat != null)
-                    {
-                        return Ok(new CategoryDto(cat));
-                    }
-                    // TODO treba li ovo svuda
-                    //Category.Db = null;
-                    //Question.Db = null;
-                //}
+                {
+                    return Ok(new CategoryDto(cat));
+                }
                 return NotFound();
             }
             catch (Exception ex)

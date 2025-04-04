@@ -30,7 +30,7 @@ namespace Knowledge.Controllers
 
     
         [HttpGet("{partitionKey}/{id}")]
-        //[ResponseCache(Duration = 30, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
         public async Task<IActionResult> GetCatsUpTheTree(string partitionKey, string id)
         {
             try
@@ -70,6 +70,8 @@ namespace Knowledge.Controllers
 
 
         [HttpGet("{partitionKey}/{id}/{hidrate}")]
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
+
         public async Task<IActionResult> GetCategoryHidrated(string partitionKey, string id, bool hidrate)
         {
             // hidrate collections except questions
