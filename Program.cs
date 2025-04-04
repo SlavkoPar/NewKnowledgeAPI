@@ -106,7 +106,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddMemoryCache();
 
-//builder.Services.AddResponseCaching();
+builder.Services.AddResponseCaching();
 
 var app = builder.Build();
 
@@ -129,7 +129,7 @@ app.UseHttpsRedirection();
 app.UseRouting();
 app.UseCors("default"); // UseCors must be called before UseResponseCaching 
 
-//app.UseResponseCaching();
+app.UseResponseCaching();
 
 app.UseAuthentication();
 //app.UseCors(MyAllowSpecificOrigins);

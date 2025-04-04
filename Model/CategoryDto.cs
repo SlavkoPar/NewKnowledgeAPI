@@ -37,7 +37,7 @@ namespace Knowledge.Model
             this.Title = category.Title;
             this.Kind = category.Kind;
             this.ParentCategory = category.ParentCategory;
-            this.Level = 1;
+            this.Level = category.Level;
             this.Variations = category.Variations;
             this.NumOfQuestions = category.NumOfQuestions;
             this.HasSubCategories = category.HasSubCategories;

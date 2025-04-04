@@ -78,7 +78,7 @@ namespace Knowledge.Services
             // Create a new container
             var container = await database!.CreateContainerIfNotExistsAsync(containerId, "/partitionKey");
             containers.Add(containerId, container);
-            Console.WriteLine("Created Container: {0}\n", containers[containerId]!.Id);
+            //Console.WriteLine("Created Container: {0}\n", containers[containerId]!.Id);
             return container;
         }
         // </CreateContainerAsync>
@@ -128,6 +128,7 @@ namespace Knowledge.Services
                 foreach (var categoryData in categoriesData!.Categories)
                 {
                     categoryData.parentCategory = null;
+                    categoryData.level = 1;
                     list.Add(categoryData);
                     await categoyService.AddCategory(categoryData);
                 }

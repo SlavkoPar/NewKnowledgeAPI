@@ -162,6 +162,7 @@ namespace Knowledge.Services
                     {
                         //subCategoryData.PartitionKey = partitionKey;
                         subCategoryData.parentCategory = category.Id;
+                        subCategoryData.level = category.Level + 1;
                         await AddCategory(subCategoryData);
                     }
                 }

@@ -37,3 +37,7 @@ bin/
 # AppSettings
 appsettings.json
 appsettings.Development.json
+
+# Slavko
+*.pubxml.user
+
