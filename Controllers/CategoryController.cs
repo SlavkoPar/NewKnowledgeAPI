@@ -11,6 +11,8 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Identity.Web.Resource;
 using System.ComponentModel;
+using System.Collections.Concurrent;
+using System.Drawing.Printing;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -133,22 +135,75 @@ namespace Knowledge.Controllers
         }
 
 
-        // POST api/<FamilyController>
         [HttpPost]
-        public void Post([FromBody]string value)
+        [Authorize]
+        public async Task<IActionResult> Post([FromBody] CategoryDto categoryDto)
         {
+            try
+            {
+                Console.WriteLine("===>>> CreateCategory: {0} \n", categoryDto.Title);
+                var categoryService = new CategoryService(dbService);
+                if (categoryDto.PartitionKey == "null")
+                {
+                    categoryDto.PartitionKey = categoryDto.Id;
+                }
+                Category category = await categoryService.CreateCategory(categoryDto);
+                if (category != null)
+                {
+                    return Ok(new CategoryDto(category));
+                }
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // PUT api/<FamilyController>/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        [HttpPut]
+        [Authorize]
+        public async Task<IActionResult> Put([FromBody] CategoryDto categoryDto)
         {
+            try
+            {
+                Console.WriteLine("===>>> UpdateCategory: {0} \n", categoryDto.Title);
+                var categoryService = new CategoryService(dbService);
+                Category category = await categoryService.UpdateCategory(categoryDto);
+                if (category != null)
+                {
+                    return Ok(new CategoryDto(category));
+                }
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        // DELETE api/<FamilyController>/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        //[HttpDelete("{partitionKey}, {id}")]
+        [HttpDelete]
+        [Authorize]
+        public async Task<IActionResult> Delete([FromBody] CategoryKey categoryKey) //string PartitionKey, string id)
         {
+            try
+            {
+                Console.WriteLine("===>>> DeleteCategory: {0}/{1} \n", categoryKey.PartitionKey, categoryKey.Id);
+                var categoryService = new CategoryService(dbService);
+                string result = await categoryService.DeleteCategory(categoryKey);
+                if (result == "OK")
+                    return Ok(new { msg = result });
+                else if (result == "HasSubCategories" || result == "NumOfQuestions")
+                    return Ok(new { msg = result });
+                else if (result == "NotFound")
+                    return NotFound();
+                else
+                    return BadRequest(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

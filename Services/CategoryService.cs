@@ -1,10 +1,13 @@
 ﻿using Azure;
 using Knowledge.Model;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using System.Net;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 
 namespace Knowledge.Services
@@ -183,6 +186,105 @@ namespace Knowledge.Services
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 Console.WriteLine(ex.Message);
+            }
+        }
+
+        public async Task<Category> CreateCategory(CategoryDto categoryDto)
+        {
+            var myContainer = await container();
+            try
+            {
+                // Read the item to see if it exists.  
+                ItemResponse<Category> aResponse =
+                    await myContainer!.ReadItemAsync<Category>(
+                        categoryDto.Id,
+                        new PartitionKey(categoryDto.PartitionKey)
+                    );
+                Console.WriteLine("Item in database with id: {0} already exists\n", aResponse.Resource.Id);
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                Category category = new(categoryDto);
+                // Create an item in container.Note we provide the value of the partition key for this item
+                ItemResponse<Category> aResponse =
+                    await myContainer!.CreateItemAsync(category, new PartitionKey(categoryDto.PartitionKey));
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
+                return category;
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine(ex.Message);
+            }
+            return null;
+        }
+
+        public async Task<Category> UpdateCategory(CategoryDto categoryDto)
+        {
+            var myContainer = await container();
+            try
+            {
+                // Read the item to see if it exists.  
+                ItemResponse<Category> aResponse =
+                    await myContainer!.ReadItemAsync<Category>(
+                        categoryDto.Id,
+                        new PartitionKey(categoryDto.PartitionKey)
+                    );
+                Category category = aResponse.Resource;
+                // Update the item fields
+                category.Title = categoryDto.Title;
+                category.Kind = categoryDto.Kind;
+                category.Variations = categoryDto.Variations;
+                category.Modified = new WhoWhen(categoryDto.Modified!.nickName);
+
+                aResponse = await myContainer.ReplaceItemAsync<Category>(category, category.Id, new PartitionKey(category.PartitionKey));
+                Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);
+                return category;
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                Console.WriteLine("Category item {0} NotFound in database.\n", categoryDto.Id); //, aResponse.RequestCharge);
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine(ex.Message);
+            }
+            return null;
+        }
+
+        public async Task<string> DeleteCategory(CategoryKey categoryKey)
+        {
+            var myContainer = await container();
+            try
+            {
+                // Read the item to see if it exists.
+                
+                ItemResponse<Category> aResponse =
+                    await myContainer!.ReadItemAsync<Category>(
+                        categoryKey.Id,
+                        new PartitionKey(categoryKey.PartitionKey)
+                    );
+                Category category = aResponse.Resource;
+                if (category.HasSubCategories)
+                    return "HasSubCategories";
+                if (category.NumOfQuestions > 0)
+                    return "NumOfQuestions";
+                aResponse = await myContainer.DeleteItemAsync<Category>(category.Id, new PartitionKey(category.PartitionKey));
+                Console.WriteLine("Deleted Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);
+                return "OK";
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                Console.WriteLine("Category item {0} NotFound in database.\n", categoryKey.Id); //, aResponse.RequestCharge);
+                return  "NotFound";
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine(ex.Message);
+                return ex.Message;
             }
         }
 

@@ -15,16 +15,20 @@ namespace Knowledge.Model
         public int Kind { get; set; }
         public string? ParentCategory { get; set; }
         public int Level { get; set; }
-        public IList<string>? Variations { get; set; }
-        public int NumOfQuestions { get; set; }
-        public bool HasSubCategories { get; set; }
-        public WhoWhen Created { get; set; }
+        public IList<string> Variations { get; set; }
+        public int? NumOfQuestions { get; set; }
+        public bool? HasSubCategories { get; set; }
+        public WhoWhen? Created { get; set; }
         public WhoWhen? Modified { get; set; }
         public WhoWhen? Archived { get; set; }
         public IList<QuestionDto>? Questions { get; set; }
         public bool? HasMoreQuestions { get; set; }
 
-        public  CategoryDto(QuestionsMore questionsMore)
+        public CategoryDto()
+        {
+        }
+
+        public CategoryDto(QuestionsMore questionsMore)
         {
             this.Questions = this.Questions2Dto(questionsMore.questions);
             this.HasMoreQuestions = questionsMore.hasMoreQuestions;
@@ -57,7 +61,6 @@ namespace Knowledge.Model
                 this.Questions = this.Questions2Dto(category.Questions);
                 this.HasMoreQuestions = category.HasMoreQuestions;
             }
-
         }
 
         public IList<QuestionDto> Questions2Dto(IList<Question> questions)

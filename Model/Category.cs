@@ -58,6 +58,24 @@ namespace Knowledge.Model
             Questions = null;
         }
 
+        public Category(CategoryDto categoryDto)
+        {
+            Type = "category";
+            Id = categoryDto.Id;
+            PartitionKey = categoryDto.PartitionKey!;
+            Title = categoryDto.Title;
+            Kind = categoryDto.Kind;
+            ParentCategory = categoryDto.ParentCategory;
+            Level = (int)categoryDto.Level;
+            Variations = categoryDto.Variations ?? [];
+            NumOfQuestions = 0;
+            HasSubCategories = false;
+            Created = new WhoWhen(categoryDto.Created!.nickName); ;
+            Archived = null;
+            Questions = null;
+        }
+
+
         public void Dispose()
         {
             Dispose(true);
