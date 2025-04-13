@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
-using Knowledge.Model;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using Newtonsoft.Json;

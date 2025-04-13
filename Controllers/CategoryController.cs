@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
-using Knowledge.Model;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using Newtonsoft.Json;
@@ -13,6 +12,7 @@ using Microsoft.Identity.Web.Resource;
 using System.ComponentModel;
 using System.Collections.Concurrent;
 using System.Drawing.Printing;
+using NewKnowledgeAPI.Model.Categories;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 

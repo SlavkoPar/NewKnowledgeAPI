@@ -1,14 +1,8 @@
-﻿using Azure;
-using Knowledge.Model;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Mvc.RazorPages;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
+using NewKnowledgeAPI.Model.Categories;
+using NewKnowledgeAPI.Model.Questions;
 using System.Net;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
 
 namespace Knowledge.Services
 {
@@ -54,7 +48,6 @@ namespace Knowledge.Services
                 FeedResponse<Category> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                 foreach (Category category in currentResultSet)
                 {
-                    //subCategories.Add(new CategoryDto(category));
                     subCategories.Add(category);
                 }
             }
@@ -62,14 +55,14 @@ namespace Knowledge.Services
         }
 
 
-        internal async Task<List<Category>> GetSubCategories(string partitionKey, string parentCategory)
+        internal async Task<List<Category>> GetSubCategories(string PartitionKey, string parentCategory)
         {
             var myContainer = await container();
             var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND IS_NULL(c.Archived) AND " 
             + (
-                partitionKey == "null"
+                PartitionKey == "null"
                     ? $""
-                    : $" c.partitionKey = '{partitionKey}' AND "
+                    : $" c.partitionKey = '{PartitionKey}' AND "
             )
             + (
                 parentCategory == "null"
@@ -94,14 +87,14 @@ namespace Knowledge.Services
 
 
 
-        public async Task<Category> GetCategory(string partitionKey, string Id, bool hidrate, int pageSize, string? includeQuestionId)
+        public async Task<Category> GetCategory(string PartitionKey, string Id, bool hidrate, int pageSize, string? includeQuestionId)
         {
             var myContainer = await container();
             try
             {
                 // Read the item to see if it exists.  
                 //ItemResponse<Category> aResponse =
-                Category category = await myContainer!.ReadItemAsync<Category>(Id, new PartitionKey(partitionKey));
+                Category category = await myContainer!.ReadItemAsync<Category>(Id, new PartitionKey(PartitionKey));
                 if (hidrate && category != null)
                 {
                     // hidrate collections except questions, like  category.x = hidrate;  
@@ -123,32 +116,53 @@ namespace Knowledge.Services
             return null;
         }
 
+        public async Task<HttpStatusCode> CheckDuplicate(string title) //QuestionData questionData)
+        {
+            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND c.Title = '{title}'";
+            QueryDefinition queryDefinition = new(sqlQuery);
+            FeedIterator<Question> queryResultSetIterator =
+                _container!.GetItemQueryIterator<Question>(queryDefinition);
+            if (queryResultSetIterator.HasMoreResults)
+            {
+                FeedResponse<Question> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                if (currentResultSet.Count == 0)
+                {
+                    throw new CosmosException("Category Title already exists", HttpStatusCode.NotFound, 0, "0", 0);
+                }
+            }
+            return HttpStatusCode.OK;
+        }
+
         public async Task AddCategory(CategoryData categoryData)
         {
             var myContainer = await container();
 
-            if (categoryData.parentCategory == null)
+            if (categoryData.ParentCategory == null)
             {
-                _partitionKey = categoryData.id;
+                _partitionKey = categoryData.Id;
             }
             categoryData.PartitionKey = _partitionKey;
             // Create a category object 
-            if (categoryData.id == "DOMAIN")
+            if (categoryData.Id == "DOMAIN")
             {
                 for (var i = 1; i <= 500; i++)
-                    categoryData.questions!.Add(new QuestionData(categoryData.id, $"Demo data for DOMAIN " + i.ToString("D3")));
+                    categoryData.Questions!.Add(new QuestionData(categoryData.Id, $"Demo data for DOMAIN " + i.ToString("D3")));
             }
 
             Category category = new(categoryData);
+
             try
             {
-                // Read the item to see if it exists.  
+                // Check if the id already exists
                 ItemResponse<Category> aResponse =
                     await myContainer!.ReadItemAsync<Category>(
                         category.Id,
                         new PartitionKey(_partitionKey)
                     );
-                Console.WriteLine("Item in database with id: {0} already exists\n", aResponse.Resource.Id);
+                Console.WriteLine("Category in database with id: {0} already exists\n", aResponse.Resource.Id);
+                // Check if the title already exists
+                HttpStatusCode statusCode = await CheckDuplicate(categoryData.Title);
+                Console.WriteLine("Category in database with Title: {0} already exists\n", categoryData.Title);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
@@ -159,23 +173,23 @@ namespace Knowledge.Services
                         new PartitionKey(_partitionKey)
                     );
 
-                if (categoryData.categories != null)
+                if (categoryData.Categories != null)
                 {
-                    foreach (var subCategoryData in categoryData.categories)
+                    foreach (var subCategoryData in categoryData.Categories)
                     {
                         //subCategoryData.PartitionKey = partitionKey;
-                        subCategoryData.parentCategory = category.Id;
-                        subCategoryData.level = category.Level + 1;
+                        subCategoryData.ParentCategory = category.Id;
+                        subCategoryData.Level = category.Level + 1;
                         await AddCategory(subCategoryData);
                     }
                 }
                 // questions
-                if (categoryData.questions != null)
+                if (categoryData.Questions != null)
                 {
                     QuestionService questionService = new(Db!);
-                    foreach (var questionData in categoryData.questions)
+                    foreach (var questionData in categoryData.Questions)
                     {
-                        questionData.parentCategory = category.Id;
+                        questionData.ParentCategory = category.Id;
                         await questionService.AddQuestion(questionData);
                     }
                 }
@@ -205,6 +219,7 @@ namespace Knowledge.Services
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 Category category = new(categoryDto);
+                //category.Created = new WhoWhen(categoryDto.Created!.NickName);
                 // Create an item in container.Note we provide the value of the partition key for this item
                 ItemResponse<Category> aResponse =
                     await myContainer!.CreateItemAsync(category, new PartitionKey(categoryDto.PartitionKey));
@@ -236,7 +251,7 @@ namespace Knowledge.Services
                 category.Title = categoryDto.Title;
                 category.Kind = categoryDto.Kind;
                 category.Variations = categoryDto.Variations;
-                category.Modified = new WhoWhen(categoryDto.Modified!.nickName);
+                //category.Modified = new WhoWhen(categoryDto.Modified!.NickName);
 
                 aResponse = await myContainer.ReplaceItemAsync<Category>(category, category.Id, new PartitionKey(category.PartitionKey));
                 Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);

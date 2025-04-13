@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
-using Knowledge.Model;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using Newtonsoft.Json;
@@ -8,6 +7,7 @@ using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using System.ComponentModel.DataAnnotations;
 using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
+using NewKnowledgeAPI.Model.Categories;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -31,7 +31,7 @@ namespace Knowledge.Controllers
     
         [HttpGet("{partitionKey}/{id}")]
         [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
-        public async Task<IActionResult> GetCatsUpTheTree(string partitionKey, string id)
+        public async Task<IActionResult> GetCatsUpTheTree(string partitionKey, string Id)
         {
             try
             {
@@ -41,7 +41,7 @@ namespace Knowledge.Controllers
                     //var category = new Category(db); 
                     //Category cat = await category.GetCategory(partitionKey, id, false, 0, null);
                     var categoryService = new CategoryService(dbService);
-                    Category cat = await categoryService.GetCategory(partitionKey, id, false, 0, null);
+                    Category cat = await categoryService.GetCategory(partitionKey, Id, false, 0, null);
 
                     if (cat != null)
                     {

@@ -3,10 +3,11 @@ using Microsoft.Azure.Cosmos.Linq;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace Knowledge.Model
+namespace NewKnowledgeAPI.Model.Questions
 {
     public class QuestDto
     {
+        public string PartitionKey { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
         public string ParentCategory { get; set; }
@@ -17,6 +18,7 @@ namespace Knowledge.Model
 
         public QuestDto(Question question)
         {
+            PartitionKey = question.PartitionKey;
             ParentCategory = question.ParentCategory!;
             Id = question.Id;
             Title = question.Title;

@@ -3,7 +3,7 @@ using Microsoft.Azure.Cosmos;
 using System.Collections.Generic;
 using System.Net;
 using Newtonsoft.Json;
-using Knowledge.Model;
+using NewKnowledgeAPI.Model.Categories;
 
 namespace Knowledge.Services
 {
@@ -117,20 +117,21 @@ namespace Knowledge.Services
 
         private async Task<bool> AddInitialData()
         {
-            List<CategoryData> list = [];
+            //List<CategoryData> list = [];
             try
             {
                 //var category = new Category(this);
-                var categoyService = new CategoryService(this);
+                var categoryService = new CategoryService(this);
                 using StreamReader r = new("InitialData/categories-questions.json");
                 string json = r.ReadToEnd();
                 CategoriesData? categoriesData = JsonConvert.DeserializeObject<CategoriesData>(json);
                 foreach (var categoryData in categoriesData!.Categories)
                 {
-                    categoryData.parentCategory = null;
-                    categoryData.level = 1;
-                    list.Add(categoryData);
-                    await categoyService.AddCategory(categoryData);
+                    categoryData.ParentCategory = null;
+                    categoryData.Level = 1;
+                    //list.Add(categoryData);
+                    Console.WriteLine("ADDING CATEGORIESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+                    await categoryService.AddCategory(categoryData);
                 }
                 return true;
             }
