@@ -2,14 +2,14 @@
 using System.Diagnostics.Metrics;
 
 
-namespace NewKnowledgeAPI.Model.Questions
+namespace NewKnowledgeAPI.Categories.Model
 {
-    public class QuestionKey
+    public class CategoryKey
     {
         public string Id { get; set; }
         public string PartitionKey { get; set; }
 
-        public QuestionKey()
+        public CategoryKey()
         {
         }
     }

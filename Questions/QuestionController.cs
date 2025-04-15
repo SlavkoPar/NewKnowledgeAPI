@@ -6,13 +6,13 @@ using Newtonsoft.Json;
 using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
-using NewKnowledgeAPI.Model.Questions;
-using NewKnowledgeAPI.Model.Categories;
-using Microsoft.VisualBasic;
+using NewKnowledgeAPI.Categories.Model;
+using NewKnowledgeAPI.Questions.Model;
+using NewKnowledgeAPI.Categories;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Knowledge.Controllers
+namespace NewKnowledgeAPI.Questions
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -54,10 +54,13 @@ namespace Knowledge.Controllers
         {
             try
             {
+                var categoryService = new CategoryService(dbService);   
                 var questionService = new QuestionService(dbService);
                 QuestionEx questionEx = await questionService.GetQuestion(partitionKey, id);
-                if (questionEx.question == null)
-                    return NotFound();
+                Question question = questionEx.question;
+                if (question == null)
+                    return NotFound(new QuestionDtoEx(questionEx));
+                question.CategoryTitle = await categoryService.getCategoryTitle(question);
                 return Ok(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)
@@ -94,24 +97,29 @@ namespace Knowledge.Controllers
         {
             try
             {
-                Console.WriteLine("*********=====>>>>>> CreateQuestion"); 
+                Console.WriteLine("*********=====>>>>>> questionDto"); 
                 Console.WriteLine(JsonConvert.SerializeObject(questionDto));
-                
+
+                var categoryService = new CategoryService(dbService);
                 var questionService = new QuestionService(dbService);
-                
+
                 QuestionEx questionEx = await questionService.CreateQuestion(questionDto);
-                if (questionEx.question != null)
+                Console.WriteLine("*********=====>>>>>> questionEx");
+                Console.WriteLine(JsonConvert.SerializeObject(questionEx));
+                var question = questionEx.question;
+                if (question != null)
                 {
-                    return Ok(new QuestionDtoEx(questionEx));
+                    //Category category = new Category(questionEx.question);
+                    questionDto.Modified = questionDto.Created; // to be used for category
+                    await categoryService.UpdateNumOfQuestions(questionDto, 1);
                 }
-                Ok(questionEx);
-                //return NotFound();
+                // Console.WriteLine("^^^^^^^^^^^ questionEx" + JsonConvert.SerializeObject(questionEx));
+                return Ok(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)
             {
                 return BadRequest(ex.Message);
             }
-            return BadRequest("");
         }
 
         [HttpPut]
@@ -126,7 +134,7 @@ namespace Knowledge.Controllers
                 QuestionEx questionEx = await questionService.UpdateQuestion(questionDto);
                 if (questionEx!.question != null)
                     return Ok(new QuestionDtoEx(questionEx));
-                return NotFound(questionEx);
+                return NotFound(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)
             {
@@ -136,19 +144,21 @@ namespace Knowledge.Controllers
 
         [HttpDelete]
         [Authorize]
-        public async Task<IActionResult> Delete([FromBody] QuestionKey questionKey) //string PartitionKey, string id)
+        public async Task<IActionResult> Delete([FromBody] QuestionDto questionDto) //string PartitionKey, string id)
         {
             try
             {
-                Console.WriteLine("===>>> DeleteQuestion: {0}/{1} \n", questionKey.PartitionKey, questionKey.Id);
+                Console.WriteLine("===>>> DeleteQuestion: {0}/{1} \n", questionDto.PartitionKey, questionDto.Id);
+                var categoryService = new CategoryService(dbService);
                 var questionService = new QuestionService(dbService);
-                string result = await questionService.DeleteQuestion(questionKey);
-                if (result == "OK")
-                    return Ok(new { msg = result });
-                else if (result == "NotFound")
-                    return NotFound();
-                else
-                    return BadRequest(result);
+                QuestionEx questionEx = await questionService.DeleteQuestion(questionDto);
+                if (questionEx!.question != null)
+                {
+                    questionDto.Modified = questionDto.Archived;
+                    await categoryService.UpdateNumOfQuestions(questionDto, -1);
+                    return Ok(new QuestionDtoEx(questionEx));
+                }
+                return NotFound(questionEx);
             }
             catch (Exception ex)
             {

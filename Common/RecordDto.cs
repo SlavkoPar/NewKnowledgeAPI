@@ -1,6 +1,5 @@
-﻿using NewKnowledgeAPI.Model.Categories;
-
-namespace NewKnowledgeAPI.Model.Common
+﻿
+namespace NewKnowledgeAPI.Common
 {
     public class RecordDto
     {
@@ -22,9 +21,12 @@ namespace NewKnowledgeAPI.Model.Common
 
         public RecordDto(WhoWhen Created, WhoWhen Modified, WhoWhen Archived)
         {
-            this.Created = new WhoWhenDto(Created);
-            this.Modified = new WhoWhenDto(Modified);
-            this.Archived = new WhoWhenDto(Archived);
+            if (Created != null)
+                this.Created = new WhoWhenDto(Created);
+            if (Modified != null)
+                this.Modified = new WhoWhenDto(Modified);
+            if (Archived != null)
+                this.Archived = new WhoWhenDto(Archived);
         }
 
 

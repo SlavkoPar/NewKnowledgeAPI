@@ -1,8 +1,5 @@
-﻿using NewKnowledgeAPI.Model.Questions;
-using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-
-namespace NewKnowledgeAPI.Model.Common
+﻿
+namespace NewKnowledgeAPI.Common
 {
 
     public class WhoWhenDto
@@ -13,7 +10,7 @@ namespace NewKnowledgeAPI.Model.Common
 
         public WhoWhenDto(string NickName)
         {
-            this.Time = DateTime.Now;
+            Time = DateTime.Now;
             this.NickName = NickName;
         }
 
@@ -21,8 +18,8 @@ namespace NewKnowledgeAPI.Model.Common
         {
             if (whoWhen == null)
             {
-                this.Time = DateTime.Now;
-                this.NickName = "NN";
+                Time = DateTime.Now;
+                NickName = "NN";
             }
             else
             {

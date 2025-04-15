@@ -1,8 +1,8 @@
-﻿using NewKnowledgeAPI.Model.Questions;
+﻿using NewKnowledgeAPI.Questions.Model;
 using System.Diagnostics.Metrics;
 
 
-namespace NewKnowledgeAPI.Model.Categories
+namespace NewKnowledgeAPI.Categories.Model
 {
     public class CategoryData
     {

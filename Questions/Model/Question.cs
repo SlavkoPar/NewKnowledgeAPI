@@ -1,11 +1,7 @@
-﻿using System.Drawing.Printing;
-using System.Net;
-using Microsoft.Azure.Cosmos;
-using NewKnowledgeAPI.Model.Categories;
-using NewKnowledgeAPI.Model.Common;
+﻿using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 
-namespace NewKnowledgeAPI.Model.Questions
+namespace NewKnowledgeAPI.Questions.Model
 {
     public class Question : Record, IDisposable
     {
@@ -17,6 +13,7 @@ namespace NewKnowledgeAPI.Model.Questions
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
 
+        public string? CategoryTitle { get; set; }
         public string Title { get; set; }
         public string? ParentCategory { get; set; }
         public List<long> AssignedAnswers { get; set; }

@@ -1,11 +1,11 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using NewKnowledgeAPI.Model.Common;
-using NewKnowledgeAPI.Model.Questions;
+using NewKnowledgeAPI.Common;
+using NewKnowledgeAPI.Questions.Model;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace NewKnowledgeAPI.Model.Categories
+namespace NewKnowledgeAPI.Categories.Model
 {
     public class CategoryDto : RecordDto
     {
@@ -28,17 +28,18 @@ namespace NewKnowledgeAPI.Model.Categories
             : base()
         {
         }
+      
 
         public CategoryDto(string parentCategory, QuestionsMore questionsMore)
             : base() // TODO
             //: base(null, null, null) // TODO prosledi 
         {
-            this.Id = parentCategory;
-            this.PartitionKey = "Doesn't matter";
-            this.Title = "deca";
-            this.Kind = 1;
-            this.Level = 1;
-            this.Variations = [];
+            Id = parentCategory;
+            PartitionKey = "Doesn't matter";
+            Title = "deca";
+            Kind = 1;
+            Level = 1;
+            Variations = [];
 
             Console.WriteLine("pitanja {0}", questionsMore.questions.Count);
             //if (questionsMore.questions.Count > 0) {

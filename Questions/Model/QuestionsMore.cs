@@ -2,7 +2,7 @@
 using System.Net;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
-namespace NewKnowledgeAPI.Model.Questions
+namespace NewKnowledgeAPI.Questions.Model
 {
     public class QuestionsMore
     {
@@ -11,7 +11,7 @@ namespace NewKnowledgeAPI.Model.Questions
         public QuestionsMore(List<Question> questions, bool hasMore)
         {
             this.questions = questions;
-            this.hasMoreQuestions = hasMore;
+            hasMoreQuestions = hasMore;
         }
     }
 }

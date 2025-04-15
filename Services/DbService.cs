@@ -1,9 +1,9 @@
 ﻿
 using Microsoft.Azure.Cosmos;
-using System.Collections.Generic;
 using System.Net;
 using Newtonsoft.Json;
-using NewKnowledgeAPI.Model.Categories;
+using NewKnowledgeAPI.Categories.Model;
+using NewKnowledgeAPI.Categories;
 
 namespace Knowledge.Services
 {

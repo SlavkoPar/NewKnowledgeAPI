@@ -3,7 +3,7 @@ using Microsoft.Azure.Cosmos.Linq;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace NewKnowledgeAPI.Model.Questions
+namespace NewKnowledgeAPI.Questions.Model
 {
     public class QuestDto
     {

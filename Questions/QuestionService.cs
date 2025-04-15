@@ -1,17 +1,12 @@
-﻿using System.Collections.Generic;
-using System.Drawing.Printing;
-using System.Net;
-using Azure;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.AspNetCore.Routing;
+﻿using System.Net;
+using Knowledge.Services;
 using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using NewKnowledgeAPI.Model.Questions;
+using NewKnowledgeAPI.Common;
+using NewKnowledgeAPI.Questions.Model;
 using Newtonsoft.Json;
 
 
-namespace Knowledge.Services
+namespace NewKnowledgeAPI.Questions
 {
     public class QuestionService : IDisposable
     {
@@ -39,7 +34,7 @@ namespace Knowledge.Services
                  
         public async Task<HttpStatusCode> CheckDuplicate(string Title) //QuestionData questionData)
         {
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'question' AND c.Title = '{Title}'";
+            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'question' AND c.Title = '{Title}' AND IS_NULL(c.Archived)";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Question> queryResultSetIterator =
                 _container!.GetItemQueryIterator<Question>(queryDefinition);
@@ -97,6 +92,7 @@ namespace Knowledge.Services
             string msg = "";
             try
             {
+                Console.WriteLine($"*****************************  {PartitionKey}/{Id}");
                 // Read the item to see if it exists.  
                 question = await myContainer.ReadItemAsync<Question>(
                     Id,
@@ -105,31 +101,31 @@ namespace Knowledge.Services
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
+                Console.WriteLine("NotFound");
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 Console.WriteLine(ex.Message);
             }
+            Console.WriteLine(JsonConvert.SerializeObject(question));
+            Console.WriteLine("*****************************");
             return new QuestionEx(question, msg);
         }
 
-        public async Task<QuestionEx?> CreateQuestion(QuestionDto questionDto)
+        public async Task<QuestionEx> CreateQuestion(QuestionDto questionDto)
         {
             var myContainer = await container();
             try
             {
                 // Read the item to see if it exists.  
                 HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
-
-                /*
-                 *  TODO Proveri generisani Id duplicate
-                 */
+                /*  TODO Proveri generisani Id duplicate  */
 
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 //var msg = $"Created item in database with id: {aResponse.Resource.Id} Operation consumed {aResponse.RequestCharge} RUs.\n", , );
                 //Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
-                var msg = $"Created item in database with Title: {questionDto.Title}";
+                var msg = $"Question with Title: \"{questionDto.Title}\" already exists in database!";
                 Console.WriteLine(msg);
                 return new QuestionEx(null, msg);
             }
@@ -142,7 +138,9 @@ namespace Knowledge.Services
                         question,
                         new PartitionKey(question.PartitionKey)
                     );
-                return new QuestionEx(null, $"Item in database with Title: {questionDto.Title} already exists\n");
+                var msg = $"Created question in database with Title: {questionDto.Title}";
+                Console.WriteLine(msg);
+                return new QuestionEx(aResponse.Resource, "");
             }
             catch (Exception ex)
             {
@@ -152,7 +150,59 @@ namespace Knowledge.Services
             }
         }
 
-        public async Task<QuestionEx?> UpdateQuestion(QuestionDto questionDto)
+        public async Task<QuestionEx> UpdateQuestion(QuestionDto questionDto)
+        {
+            var myContainer = await container();
+            try
+            {
+                // Read the item to see if it exists.  
+                ItemResponse<Question> aResponse =
+                    await myContainer!.ReadItemAsync<Question>(
+                        questionDto.Id,
+                        new PartitionKey(questionDto.PartitionKey)
+                    );
+                Question question = aResponse.Resource;
+                var doUpdate = true;
+                if (!question.Title.Equals(questionDto.Title, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
+                        doUpdate = false;
+                        var msg = $"Question with Title: \"{questionDto.Title}\" already exists in database.";
+                        Console.WriteLine(msg);
+                        return new QuestionEx(null, msg);
+                    }
+                    catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        question.Title = questionDto.Title;
+                    }
+                }
+                if (doUpdate)
+                {
+                    question.Source = questionDto.Source;
+                    question.Status = questionDto.Status;
+                    question.Modified = new WhoWhen(questionDto.Modified!);
+                    aResponse = await myContainer.ReplaceItemAsync(question, question.Id, new PartitionKey(question.PartitionKey));
+                    Console.WriteLine($"Updated Question \"{question.Id}\" / \"{question.Title}\"");
+                    return new QuestionEx(aResponse.Resource, "");
+                }
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                var msg = $"Question Id: \"{questionDto.Id}\" Not Found in database.";
+                Console.WriteLine(msg); 
+                return new QuestionEx(null, msg);
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine(ex.Message);
+            }
+            return new QuestionEx(null, "Server Problem");
+        }
+
+        public async Task<QuestionEx> DeleteQuestion(QuestionDto questionDto)
         {
             var myContainer = await container();
             var duplicateTitle = false;
@@ -171,24 +221,22 @@ namespace Knowledge.Services
                 {
                     HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
                 }
+                // TODO check if is it already Archived
+                question.Archived = new WhoWhen(questionDto.Archived!.NickName);
 
-                question.Title = questionDto.Title;
-                question.Source = questionDto.Source;
-                question.Status = questionDto.Status;
-
-                aResponse = await myContainer.ReplaceItemAsync<Question>(question, question.Id, new PartitionKey(question.PartitionKey));
+                aResponse = await myContainer.ReplaceItemAsync(question, question.Id, new PartitionKey(question.PartitionKey));
                 Console.WriteLine("Updated Question [{0},{1}].\n \tBody is now: {2}\n", question.Title, question.Id, question);
-                new QuestionEx(aResponse.Resource, "");
+                return new QuestionEx(aResponse.Resource, "");
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 var msg = $"Question item {questionDto.Id} NotFound in database.";
-                if (duplicateTitle) {
+                if (duplicateTitle)
+                {
                     msg = $"Question Title: {questionDto.Title} aleready exists in database.";
                 }
                 Console.WriteLine(msg); //, aResponse.RequestCharge);
                 return new QuestionEx(null, msg);
-
             }
             catch (Exception ex)
             {
@@ -198,7 +246,8 @@ namespace Knowledge.Services
             return new QuestionEx(null, "Server Problem");
         }
 
-        public async Task<string> DeleteQuestion(QuestionKey questionKey)
+        /*
+        public async Task<string> DeleteQuestion(QuestionDto questionDto)
         {
             var myContainer = await container();
             try
@@ -207,8 +256,8 @@ namespace Knowledge.Services
 
                 ItemResponse<Question> aResponse =
                     await myContainer!.ReadItemAsync<Question>(
-                        questionKey.Id,
-                        new PartitionKey(questionKey.PartitionKey)
+                        questionDto.Id,
+                        new PartitionKey(questionDto.PartitionKey)
                     );
                 Question question = aResponse.Resource;
                 aResponse = await myContainer.DeleteItemAsync<Question>(question.Id, new PartitionKey(question.PartitionKey));
@@ -227,8 +276,9 @@ namespace Knowledge.Services
                 return ex.Message;
             }
         }
+        */
 
- 
+
         public async Task<QuestionsMore> GetQuestions(string parentCategory, int startCursor, int pageSize, string includeQuestionId)
         {
             var myContainer = await container();
@@ -258,7 +308,7 @@ namespace Knowledge.Services
                         {
                             included = true;
                         }
-                        Console.WriteLine("Id je {0}", question.Id);
+                        Console.WriteLine(">>>>>>>> question is: {0}", JsonConvert.SerializeObject(question));
                         questions.Add(question);
                         n++;
                         if (n >= pageSize && (includeQuestionId == null || included))

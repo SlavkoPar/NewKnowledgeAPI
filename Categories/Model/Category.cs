@@ -1,14 +1,9 @@
-﻿using Azure;
-using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using NewKnowledgeAPI.Model.Common;
-using NewKnowledgeAPI.Model.Questions;
+﻿
+using NewKnowledgeAPI.Common;
+using NewKnowledgeAPI.Questions.Model;
 using Newtonsoft.Json;
-using System.Net;
-using System.Runtime.CompilerServices;
 
-namespace NewKnowledgeAPI.Model.Categories
+namespace NewKnowledgeAPI.Categories.Model
 {
     public class Category : Record, IDisposable
     {
@@ -31,6 +26,14 @@ namespace NewKnowledgeAPI.Model.Categories
             : base()
         {
         }
+
+        public Category(Question question)
+          : base()
+        {
+            Id = question.ParentCategory!;
+            PartitionKey = question.PartitionKey;
+        }
+
 
         public Category(CategoryData categoryData)
             : base(new WhoWhen("Admin"), null, null)

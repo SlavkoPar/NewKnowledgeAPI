@@ -12,11 +12,11 @@ using Microsoft.Identity.Web.Resource;
 using System.ComponentModel;
 using System.Collections.Concurrent;
 using System.Drawing.Printing;
-using NewKnowledgeAPI.Model.Categories;
+using NewKnowledgeAPI.Categories.Model;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace Knowledge.Controllers
+namespace NewKnowledgeAPI.Categories.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]

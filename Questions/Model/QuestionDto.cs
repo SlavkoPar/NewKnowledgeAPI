@@ -1,10 +1,10 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
-using NewKnowledgeAPI.Model.Common;
+using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace NewKnowledgeAPI.Model.Questions
+namespace NewKnowledgeAPI.Questions.Model
 {
     public class QuestionDto : RecordDto
     {
@@ -25,7 +25,7 @@ namespace NewKnowledgeAPI.Model.Questions
         public QuestionDto(Question question)
             : base(question.Created, question.Modified, question.Archived)
         {
-            Console.WriteLine(JsonConvert.SerializeObject(question));
+            //Console.WriteLine(JsonConvert.SerializeObject(question));
             PartitionKey = question.PartitionKey;
             Id = question.Id;
             Title = question.Title;
@@ -46,13 +46,13 @@ namespace NewKnowledgeAPI.Model.Questions
         //}
         public QuestionDtoEx(QuestionEx questionEx)
         {
-            this.questionDto = questionEx.question != null ? new QuestionDto(questionEx.question!) : null;
-            this.msg = msg!;
+            questionDto = questionEx.question != null ? new QuestionDto(questionEx.question!) : null;
+            msg = questionEx.msg!;
         }
 
         public QuestionDtoEx(string msg)
         {
-            this.questionDto = null;
+            questionDto = null;
             this.msg = msg;
         }
 

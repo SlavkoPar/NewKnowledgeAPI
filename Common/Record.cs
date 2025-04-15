@@ -1,4 +1,4 @@
-﻿namespace NewKnowledgeAPI.Model.Common
+﻿namespace NewKnowledgeAPI.Common
 {
     public class Record
     {

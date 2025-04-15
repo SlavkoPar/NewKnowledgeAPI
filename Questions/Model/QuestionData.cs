@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.Metrics;
 
 
-namespace NewKnowledgeAPI.Model.Questions
+namespace NewKnowledgeAPI.Questions.Model
 {
     public class QuestionData
     {
