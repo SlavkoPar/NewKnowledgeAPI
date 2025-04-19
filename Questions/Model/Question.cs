@@ -35,6 +35,7 @@ namespace NewKnowledgeAPI.Questions.Model
             Type = "question";
             PartitionKey = questionData.ParentCategory!;
             ParentCategory = questionData.ParentCategory;
+            CategoryTitle = null;
             Title = questionData.Title;
             AssignedAnswers = [];
             NumOfAssignedAnswers = 0;
@@ -50,6 +51,7 @@ namespace NewKnowledgeAPI.Questions.Model
             Type = "question";
             PartitionKey = questionDto.PartitionKey!;
             ParentCategory = questionDto.ParentCategory;
+            CategoryTitle = null;
             Title = questionDto.Title;
             AssignedAnswers = questionDto.AssignedAnswers!;
             NumOfAssignedAnswers = questionDto.NumOfAssignedAnswers;
@@ -59,6 +61,19 @@ namespace NewKnowledgeAPI.Questions.Model
 
         //public override string ToString() => 
         //    $"{PartitionKey}/{Id}, {Title} {ParentCategory} ";
+
+        public void Deconstruct(out string partitionKey, out string id, out string title, out string? parentCategory,
+                                out string type, out int source, out int status, out List<long> assignedAnswers)
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+            title = Title;
+            parentCategory = ParentCategory;
+            type = Type;
+            source = Source;
+            status = Status;
+            assignedAnswers = AssignedAnswers;
+        }
 
         public void Dispose()
         {
@@ -72,17 +87,5 @@ namespace NewKnowledgeAPI.Questions.Model
             {
             }
         }
-    }
-
-    public class QuestionEx
-    {
-        public QuestionEx(Question? question, string msg)
-        {
-            this.question = question;
-            this.msg = msg;
-        }
-
-        public Question? question { get; set; }
-        public string msg { get; set; }    
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Knowledge.Services;
 using Microsoft.Azure.Cosmos;
+using NewKnowledgeAPI.Categories.Model;
 using NewKnowledgeAPI.Common;
 using NewKnowledgeAPI.Questions.Model;
 using Newtonsoft.Json;
@@ -32,9 +33,12 @@ namespace NewKnowledgeAPI.Questions
             this.Db = Db;
         }
                  
-        public async Task<HttpStatusCode> CheckDuplicate(string Title) //QuestionData questionData)
+        public async Task<HttpStatusCode> CheckDuplicate(string? Title, string? Id = null)
         {
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'question' AND c.Title = '{Title}' AND IS_NULL(c.Archived)";
+
+            var sqlQuery = Title != null
+                ? $"SELECT * FROM c WHERE c.Type = 'question' AND c.Title = '{Title}' AND IS_NULL(c.Archived)"
+                : $"SELECT * FROM c WHERE c.Type = 'question' AND c.Id = '{Id}' AND IS_NULL(c.Archived)";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Question> queryResultSetIterator =
                 _container!.GetItemQueryIterator<Question>(queryDefinition);
@@ -53,27 +57,87 @@ namespace NewKnowledgeAPI.Questions
         {
             var myContainer = await container();
             //Console.WriteLine(JsonConvert.SerializeObject(questionData));
+            string msg = string.Empty;
             try
             {
                 Question question = new(questionData);
                 Console.WriteLine("----->>>>> " + JsonConvert.SerializeObject(question));
                 // Read the item to see if it exists.  
                 await CheckDuplicate(questionData.Title);
-                var msg = $":::::: Item in database with Title: {questionData.Title} already exists";
+                msg = $":::::: Item in database with Title: {questionData.Title} already exists";
                 Console.WriteLine(msg);
-                return new QuestionEx(null, msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                Question question = new(questionData);
-                ItemResponse<Question> aResponse =
-                    await myContainer.CreateItemAsync(
-                        question,
-                        new PartitionKey(question.PartitionKey)
-                    );
+                Question q = new(questionData);
+                QuestionEx questionEx = await AddNewQuestion(q);
+                return questionEx;
+            }
+            catch (Exception ex)
+            {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
-                return new QuestionEx(aResponse.Resource, "");
+                msg = ex.Message;
+                Console.WriteLine(msg);
+            }
+            return new QuestionEx(null, msg);
+        }
+
+
+        public async Task<QuestionEx> AddNewQuestion(Question question)
+        {
+            var (PartitionKey, Id, Title, ParentQuestion, Kind, Level, Variations, Questions) = question;
+            var myContainer = await container();
+            string msg = string.Empty;
+            try
+            {
+                // Check if the id already exists
+                ItemResponse<Question> aResponse =
+                    await myContainer!.ReadItemAsync<Question>(
+                        Id,
+                        new PartitionKey(PartitionKey)
+                    );
+                msg = $"Question in database with id: {Id} already exists\n";
+                Console.WriteLine(msg);
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                try
+                {
+                    // Check if the title already exists
+                    HttpStatusCode statusCode = await CheckDuplicate(Title);
+                    msg = $"Question in database with Title: {Title} already exists";
+                    Console.WriteLine(msg);
+                }
+                catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
+                {
+                    ItemResponse<Question> aResponse =
+                    await myContainer!.CreateItemAsync(
+                            question,
+                            new PartitionKey(PartitionKey)
+                        );
+                    // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                    Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
+                    return new QuestionEx(aResponse.Resource, "");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine(ex.Message);
+                msg = ex.Message;
+            }
+            return new QuestionEx(null, msg);
+        }
+
+
+        public async Task<QuestionEx> CreateQuestion(QuestionDto questionDto)
+        {
+            var myContainer = await container();
+            try
+            {
+                Question q = new(questionDto);
+                QuestionEx questionEx = await AddNewQuestion(q);
+                return questionEx;
             }
             catch (Exception ex)
             {
@@ -82,7 +146,6 @@ namespace NewKnowledgeAPI.Questions
                 return new QuestionEx(null, ex.Message);
             }
         }
-
 
         public async Task<QuestionEx> GetQuestion(string PartitionKey, string Id)
         {
@@ -101,54 +164,21 @@ namespace NewKnowledgeAPI.Questions
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                Console.WriteLine("NotFound");
+                msg = "NotFound";
+                Console.WriteLine(msg);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                msg = ex.Message;
+                Console.WriteLine(msg);
             }
             Console.WriteLine(JsonConvert.SerializeObject(question));
             Console.WriteLine("*****************************");
             return new QuestionEx(question, msg);
         }
 
-        public async Task<QuestionEx> CreateQuestion(QuestionDto questionDto)
-        {
-            var myContainer = await container();
-            try
-            {
-                // Read the item to see if it exists.  
-                HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
-                /*  TODO Proveri generisani Id duplicate  */
-
-                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                //var msg = $"Created item in database with id: {aResponse.Resource.Id} Operation consumed {aResponse.RequestCharge} RUs.\n", , );
-                //Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
-                var msg = $"Question with Title: \"{questionDto.Title}\" already exists in database!";
-                Console.WriteLine(msg);
-                return new QuestionEx(null, msg);
-            }
-            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-            {
-                Question question = new(questionDto);
-                // Create an item in container.Note we provide the value of the partition key for this item
-                ItemResponse<Question> aResponse =
-                    await myContainer!.CreateItemAsync(
-                        question,
-                        new PartitionKey(question.PartitionKey)
-                    );
-                var msg = $"Created question in database with Title: {questionDto.Title}";
-                Console.WriteLine(msg);
-                return new QuestionEx(aResponse.Resource, "");
-            }
-            catch (Exception ex)
-            {
-                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
-                return new QuestionEx(null, ex.Message);
-            }
-        }
+       
 
         public async Task<QuestionEx> UpdateQuestion(QuestionDto questionDto)
         {
@@ -216,11 +246,11 @@ namespace NewKnowledgeAPI.Questions
                     );
                 Question question = aResponse.Resource;
 
-                duplicateTitle = true;
-                if (!question.Title.Equals(questionDto.Title, StringComparison.OrdinalIgnoreCase))
-                {
-                    HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
-                }
+                //duplicateTitle = true;
+                //if (!question.Title.Equals(questionDto.Title, StringComparison.OrdinalIgnoreCase))
+                //{
+                //    HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
+                //}
                 // TODO check if is it already Archived
                 question.Archived = new WhoWhen(questionDto.Archived!.NickName);
 
@@ -277,7 +307,6 @@ namespace NewKnowledgeAPI.Questions
             }
         }
         */
-
 
         public async Task<QuestionsMore> GetQuestions(string parentCategory, int startCursor, int pageSize, string includeQuestionId)
         {
@@ -376,8 +405,6 @@ namespace NewKnowledgeAPI.Questions
             return [];
         }
            
-
-       
 
         public void Dispose()
         {

@@ -1,5 +1,6 @@
 ﻿using NewKnowledgeAPI.Questions.Model;
 using System.Diagnostics.Metrics;
+using System.Net;
 
 
 namespace NewKnowledgeAPI.Categories.Model
@@ -12,10 +13,33 @@ namespace NewKnowledgeAPI.Categories.Model
         public string Title { get; set; }
         public int Kind { get; set; }
         public int? Level { get; set; }
-        public IList<string>? Variations { get; set; }
-        public IList<CategoryData>? Categories { get; set; }
-        public IList<QuestionData>? Questions { get; set; }
-    }
+        public List<string>? Variations { get; set; }
+        public List<CategoryData>? Categories { get; set; }
+        public List<QuestionData>? Questions { get; set; }
+
+        public void Deconstruct(
+            out string? partitionKey,
+            out string id,
+            out string title,
+            out string? parentCategory,
+            out int kind,
+            out int? level,
+            out List<string>? variations,
+            out List<CategoryData>? categories,
+            out List<QuestionData>? questions)
+            {
+                partitionKey = PartitionKey;
+                id = Id;
+                title = Title;
+                parentCategory = ParentCategory;
+                kind = Kind;
+                level = Level;
+                variations = Variations;
+                categories = Categories;
+                questions = Questions;
+            }
+        }
+    
 
     public class CategoriesData
     {

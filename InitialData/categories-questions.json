@@ -87,7 +87,7 @@
             {
               "Id": "VIDEO",
               "Title": "Video klub",
-              "variations": [ "MTS", "SBB", "A1", "YETTEL" ],
+              "Variations": [ "MTS", "SBB", "A1", "YETTEL" ],
               "Questions": [
                 { "Title": "Napravi liste omiljenih TV sadržaja i kanala na EON Smart Boxu" },
                 { "Title": "Glasovna pretraga filmova, kanala i sadržaja EON daljinskim upravljačem" },

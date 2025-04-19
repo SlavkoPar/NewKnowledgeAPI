@@ -14,9 +14,9 @@ namespace NewKnowledgeAPI.Categories.Model
         public string PartitionKey { get; set; }
         public string Title { get; set; }
         public int Kind { get; set; }
-        public string? ParentCategory { get; set; }
+        public string ParentCategory { get; set; }
         public int Level { get; set; }
-        public IList<string>? Variations { get; set; }
+        public List<string>? Variations { get; set; }
         public int NumOfQuestions { get; set; }
         public bool HasSubCategories { get; set; }
         public List<Question>? Questions { get; set; }
@@ -45,7 +45,7 @@ namespace NewKnowledgeAPI.Categories.Model
             Kind = categoryData.Kind;
             ParentCategory = categoryData.ParentCategory;
             Level = (int)categoryData.Level;
-            Variations = categoryData.Variations ?? [];
+            Variations = categoryData.Variations ?? null;
             NumOfQuestions = categoryData.Questions == null ? 0 : categoryData.Questions.Count;
             HasSubCategories = categoryData.Categories != null && categoryData.Categories.Count > 0;
             Questions = null;
@@ -61,7 +61,7 @@ namespace NewKnowledgeAPI.Categories.Model
             Kind = categoryDto.Kind;
             ParentCategory = categoryDto.ParentCategory;
             Level = categoryDto.Level;
-            Variations = categoryDto.Variations ?? [];
+            Variations = categoryDto.Variations ?? null;
             Questions = null;
             NumOfQuestions = 0;
             HasSubCategories = false;
@@ -69,6 +69,27 @@ namespace NewKnowledgeAPI.Categories.Model
 
         //public override string ToString() =>
         //    $"{PartitionKey}/{Id} : {Title}";
+
+
+        public void Deconstruct(
+            out string partitionKey,
+            out string id, 
+            out string parentCategory, 
+            out string title, 
+            out int level, 
+            out int kind, 
+            out List<string>? variations,
+            out List<Question>? questions)
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+            parentCategory = ParentCategory;
+            title = Title;
+            kind = Kind;
+            level = Level;
+            variations = Variations;
+            questions = Questions;
+        }
 
 
         public void Dispose()

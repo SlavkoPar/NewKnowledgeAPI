@@ -120,17 +120,16 @@ namespace Knowledge.Services
             //List<CategoryData> list = [];
             try
             {
-                //var category = new Category(this);
                 var categoryService = new CategoryService(this);
                 using StreamReader r = new("InitialData/categories-questions.json");
                 string json = r.ReadToEnd();
                 CategoriesData? categoriesData = JsonConvert.DeserializeObject<CategoriesData>(json);
                 foreach (var categoryData in categoriesData!.Categories)
                 {
+                    categoryData.PartitionKey = categoryData.Id;
                     categoryData.ParentCategory = null;
                     categoryData.Level = 1;
-                    //list.Add(categoryData);
-                    Console.WriteLine("ADDING CATEGORIESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
+                    Console.WriteLine("ADDING CATEGORIESSS {0}", categoryData.Id);
                     await categoryService.AddCategory(categoryData);
                 }
                 return true;

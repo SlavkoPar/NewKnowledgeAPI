@@ -1,6 +1,4 @@
-﻿using Microsoft.Azure.Cosmos;
-using Microsoft.Azure.Cosmos.Linq;
-using NewKnowledgeAPI.Common;
+﻿using NewKnowledgeAPI.Common;
 using NewKnowledgeAPI.Questions.Model;
 using Newtonsoft.Json;
 using System.Net;
@@ -15,13 +13,13 @@ namespace NewKnowledgeAPI.Categories.Model
         public string PartitionKey { get; set; }
         public string Title { get; set; }
         public int Kind { get; set; }
-        public string? ParentCategory { get; set; }
+        public string ParentCategory { get; set; }
         public int Level { get; set; }
-        public IList<string> Variations { get; set; }
+        public List<string>? Variations { get; set; }
         public int? NumOfQuestions { get; set; }
         public bool? HasSubCategories { get; set; }
         
-        public IList<QuestionDto>? Questions { get; set; }
+        public List<QuestionDto>? Questions { get; set; }
         public bool? HasMoreQuestions { get; set; }
 
         public CategoryDto()
@@ -30,12 +28,13 @@ namespace NewKnowledgeAPI.Categories.Model
         }
       
 
-        public CategoryDto(string parentCategory, QuestionsMore questionsMore)
+        public CategoryDto(CategoryKey categoryKey, QuestionsMore questionsMore)
             : base() // TODO
             //: base(null, null, null) // TODO prosledi 
         {
-            Id = parentCategory;
-            PartitionKey = "Doesn't matter";
+            var (partitionKey, id) = categoryKey;
+            Id = id;
+            PartitionKey = partitionKey;
             Title = "deca";
             Kind = 1;
             Level = 1;
@@ -81,11 +80,29 @@ namespace NewKnowledgeAPI.Categories.Model
             List<QuestionDto> list = [];
             foreach (var question in questions)
             {
-                Console.WriteLine(JsonConvert.SerializeObject(question));
+                //Console.WriteLine(JsonConvert.SerializeObject(question));
                 list.Add(new QuestionDto(question));
             }
             return list;
         }
+
+        public void Deconstruct(out string partitionKey, out string id)
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+        }
+
+        public void Deconstruct(out string partitionKey, out string id, out string parentCategory, out string title, out int level, out int kind, out List<string>? variations)
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+            parentCategory = ParentCategory;
+            title = Title;
+            kind = Kind;
+            level = Level;
+            variations = Variations;
+        }
+
     }
 }
 

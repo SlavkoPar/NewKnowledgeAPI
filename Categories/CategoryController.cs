@@ -1,22 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
-using Newtonsoft.Json;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
-using System.ComponentModel.DataAnnotations;
 using Knowledge.Services;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Identity.Web.Resource;
-using System.ComponentModel;
-using System.Collections.Concurrent;
-using System.Drawing.Printing;
 using NewKnowledgeAPI.Categories.Model;
+using NewKnowledgeAPI.Questions.Model;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace NewKnowledgeAPI.Categories.Controllers
+namespace NewKnowledgeAPI.Categories
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -69,20 +59,20 @@ namespace NewKnowledgeAPI.Categories.Controllers
             }
         }
 
-        [HttpGet("{partitionKey}/{parentCategory}")]
-        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory" })]
-        public async Task<IActionResult> GetSubCategories(string partitionKey, string parentCategory)
+        [HttpGet("{partitionKey}/{id}")]
+        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
+        public async Task<IActionResult> GetSubCategories(string partitionKey, string id)
         {
             try
             {
-                Console.WriteLine("GetSubCategories", partitionKey, parentCategory); 
+                Console.WriteLine("GetSubCategories {0}/{1}", partitionKey, id); 
                 //using (var db = new Db(this.Configuration))
                 //{
                 //    await db.Initialize;
                 //var category = new Category(_Db);
                 //List<Category> subCategories = await category.GetSubCategories(partitionKey, parentCategory);
                 var categoryService = new CategoryService(dbService);
-                List<Category> subCategories = await categoryService.GetSubCategories(partitionKey, parentCategory);
+                List<Category> subCategories = await categoryService.GetSubCategories(partitionKey, id);
                 if (subCategories != null)
                 {
                     List<CategoryDto> list = [];
@@ -108,6 +98,7 @@ namespace NewKnowledgeAPI.Categories.Controllers
         {
             try
             {
+                CategoryKey categoryKey = new (partitionKey, id);
                 Console.WriteLine("GetCategory: {0}, {1}, {2}, {3} \n", partitionKey, id, pageSize, includeQuestionId);
 
                 // TODO 1. ovo 2. what does  /partitionKey mean?
@@ -120,17 +111,17 @@ namespace NewKnowledgeAPI.Categories.Controllers
                 //Category cat = await category.GetCategory(
                 //    partitionKey, id, true, pageSize, includeQuestionId=="null" ? null : includeQuestionId);
                 var categoryService = new CategoryService(dbService);
-                Category cat = await categoryService.GetCategory(
-                       partitionKey, id, true, pageSize, includeQuestionId == "null" ? null : includeQuestionId);
-                if (cat != null)
+                CategoryEx categoryEx = await categoryService.GetCategory(
+                       categoryKey, true, pageSize, includeQuestionId == "null" ? null : includeQuestionId);
+                if (categoryEx.category != null)
                 {
-                    return Ok(new CategoryDto(cat));
+                    return Ok(new CategoryDtoEx(categoryEx));
                 }
-                return NotFound();
+                return NotFound(new CategoryDtoEx(categoryEx));
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new CategoryDtoEx(ex.Message));
             }
         }
 
@@ -147,12 +138,8 @@ namespace NewKnowledgeAPI.Categories.Controllers
                 {
                     categoryDto.PartitionKey = categoryDto.Id;
                 }
-                Category category = await categoryService.CreateCategory(categoryDto);
-                if (category != null)
-                {
-                    return Ok(new CategoryDto(category));
-                }
-                return NotFound();
+                CategoryEx categoryEx = await categoryService.CreateCategory(categoryDto);
+                return Ok(new CategoryDtoEx(categoryEx));
             }
             catch (Exception ex)
             {
@@ -168,12 +155,12 @@ namespace NewKnowledgeAPI.Categories.Controllers
             {
                 Console.WriteLine("===>>> UpdateCategory: {0} \n", categoryDto.Title);
                 var categoryService = new CategoryService(dbService);
-                Category category = await categoryService.UpdateCategory(categoryDto);
-                if (category != null)
+                CategoryEx categoryEx = await categoryService.UpdateCategory(categoryDto);
+                if (categoryEx != null)
                 {
-                    return Ok(new CategoryDto(category));
+                    return Ok(new CategoryDtoEx(categoryEx));
                 }
-                return NotFound();
+                return NotFound(new CategoryDtoEx(categoryEx));
             }
             catch (Exception ex)
             {
@@ -184,21 +171,19 @@ namespace NewKnowledgeAPI.Categories.Controllers
         //[HttpDelete("{partitionKey}, {id}")]
         [HttpDelete]
         [Authorize]
-        public async Task<IActionResult> Delete([FromBody] CategoryKey categoryKey) //string PartitionKey, string id)
+        public async Task<IActionResult> Delete([FromBody] CategoryDto categoryDto) //string PartitionKey, string id)
         {
             try
             {
-                Console.WriteLine("===>>> DeleteCategory: {0}/{1} \n", categoryKey.PartitionKey, categoryKey.Id);
+                Console.WriteLine("===>>> DeleteCategory: {0}/{1} \n", categoryDto.PartitionKey, categoryDto.Id);
                 var categoryService = new CategoryService(dbService);
-                string result = await categoryService.DeleteCategory(categoryKey);
-                if (result == "OK")
-                    return Ok(new { msg = result });
-                else if (result == "HasSubCategories" || result == "NumOfQuestions")
-                    return Ok(new { msg = result });
-                else if (result == "NotFound")
-                    return NotFound();
-                else
-                    return BadRequest(result);
+                CategoryEx categoryEx = await categoryService.DeleteCategory(categoryDto);
+
+                if (categoryEx.category != null)
+                {
+                    return Ok(new CategoryDtoEx(categoryEx));
+                }
+                return NotFound(categoryEx);
             }
             catch (Exception ex)
             {

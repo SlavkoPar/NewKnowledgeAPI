@@ -1,14 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
-using Newtonsoft.Json;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
-using System.ComponentModel.DataAnnotations;
 using Knowledge.Services;
-using System.Collections.Generic;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.Identity.Web.Resource;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 

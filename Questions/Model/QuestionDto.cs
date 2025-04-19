@@ -11,6 +11,7 @@ namespace NewKnowledgeAPI.Questions.Model
         public string PartitionKey { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
+        public string? CategoryTitle { get; set; }
         public string? ParentCategory { get; set; }
         public List<long>? AssignedAnswers { get; set; }
         public int NumOfAssignedAnswers { get; set; }
@@ -29,6 +30,7 @@ namespace NewKnowledgeAPI.Questions.Model
             PartitionKey = question.PartitionKey;
             Id = question.Id;
             Title = question.Title;
+            CategoryTitle = question.CategoryTitle;
             ParentCategory = question.ParentCategory;
             AssignedAnswers = question.AssignedAnswers;
             NumOfAssignedAnswers = question.NumOfAssignedAnswers;
@@ -36,33 +38,7 @@ namespace NewKnowledgeAPI.Questions.Model
             Status = question.Status;
         }
     }
-
-    public class QuestionDtoEx
-    {
-        //public QuestionDtoEx(QuestionDto? questionDto, string msg)
-        //{
-        //    this.questionDto = questionDto;
-        //    this.msg = msg;
-        //}
-        public QuestionDtoEx(QuestionEx questionEx)
-        {
-            questionDto = questionEx.question != null ? new QuestionDto(questionEx.question!) : null;
-            msg = questionEx.msg!;
-        }
-
-        public QuestionDtoEx(string msg)
-        {
-            questionDto = null;
-            this.msg = msg;
-        }
-
-
-
-        public QuestionDto? questionDto { get; set; }
-        public string msg { get; set; }
-    }
-
-}
+ }
 
 
 

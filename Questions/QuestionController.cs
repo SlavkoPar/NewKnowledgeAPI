@@ -31,22 +31,32 @@ namespace NewKnowledgeAPI.Questions
         }
 
 
-        [HttpGet("{parentCategory}/{startCursor}/{pageSize}/{includeQuestionId}")]
-        public async Task<IActionResult> GetQuestions(string parentCategory, int startCursor, int pageSize, string? includeQuestionId)
+        [HttpGet("{partitionKey}/{parentCategory}/{startCursor}/{pageSize}/{includeQuestionId}")]
+        public async Task<IActionResult> GetQuestions(string partitionKey, string parentCategory, int startCursor, int pageSize, string? includeQuestionId)
         {
+            string message = string.Empty;
             try
             {
-                var questionService = new QuestionService(dbService);
-
-                QuestionsMore questionsMore = await questionService.GetQuestions(parentCategory, startCursor, pageSize, includeQuestionId);
-                Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", questionsMore.questions.Count);
-                CategoryDto categoryDto = new(parentCategory, questionsMore);
-                return Ok(categoryDto);
+                var categoryService = new CategoryService(dbService);
+                CategoryKey categoryKey = new CategoryKey(partitionKey, parentCategory);
+                CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
+                var (category, msg) = categoryEx;
+                if (category != null)
+                {
+                    var questionService = new QuestionService(dbService);
+                    QuestionsMore questionsMore = await questionService.GetQuestions(parentCategory, startCursor, pageSize, includeQuestionId);
+                    Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", questionsMore.questions.Count);
+                    CategoryDto categoryDto = new(categoryKey, questionsMore);
+                    categoryDto.Title = category.Title;
+                    return Ok(new CategoryDtoEx(categoryDto, msg));
+                }
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                message = ex.Message;
             }
+            return Ok(new CategoryDtoEx(message));
+
         }
 
         [HttpGet("{partitionKey}/{id}")]
@@ -54,13 +64,19 @@ namespace NewKnowledgeAPI.Questions
         {
             try
             {
-                var categoryService = new CategoryService(dbService);   
+                var categoryService = new CategoryService(dbService);
                 var questionService = new QuestionService(dbService);
                 QuestionEx questionEx = await questionService.GetQuestion(partitionKey, id);
-                Question question = questionEx.question;
+                var (question, msg) = questionEx;
                 if (question == null)
                     return NotFound(new QuestionDtoEx(questionEx));
-                question.CategoryTitle = await categoryService.getCategoryTitle(question);
+                CategoryKey categoryKey = new(partitionKey, question.ParentCategory!);
+                // get category Title
+                CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
+                var (category, message) = categoryEx;
+                question.CategoryTitle = category != null 
+                    ? category.Title
+                    : "NotFound Category";
                 return Ok(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)
@@ -97,7 +113,7 @@ namespace NewKnowledgeAPI.Questions
         {
             try
             {
-                Console.WriteLine("*********=====>>>>>> questionDto"); 
+                Console.WriteLine("*********=====>>>>>> questionDto");
                 Console.WriteLine(JsonConvert.SerializeObject(questionDto));
 
                 var categoryService = new CategoryService(dbService);

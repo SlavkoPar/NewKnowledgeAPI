@@ -1,17 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.Azure.Cosmos;
-using Microsoft.Extensions.Configuration;
-using System.Configuration;
-using Newtonsoft.Json;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
-using System.ComponentModel.DataAnnotations;
+
 using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
 using NewKnowledgeAPI.Categories.Model;
+using System.Collections.Generic;
+using Newtonsoft.Json;
+
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
-namespace NewKnowledgeAPI.Categories.Controllers
+namespace NewKnowledgeAPI.Categories
 {
     [Route("api/[controller]")]
     [ApiController]
@@ -35,36 +33,19 @@ namespace NewKnowledgeAPI.Categories.Controllers
         {
             try
             {
-                //using (var db = new Db(this.Configuration))
-                //{
-                    //await db.Initialize;
-                    //var category = new Category(db); 
-                    //Category cat = await category.GetCategory(partitionKey, id, false, 0, null);
-                    var categoryService = new CategoryService(dbService);
-                    Category cat = await categoryService.GetCategory(partitionKey, Id, false, 0, null);
-
-                    if (cat != null)
-                    {
-                        List<CategoryDto> list = [];
-                        list.Add(new CategoryDto(cat));
-                        var parentCategory = cat.ParentCategory;
-                        while (parentCategory != null)
-                        {
-                            Category c = await categoryService.GetCategory(partitionKey, parentCategory, false, 0, null);
-                            if (c != null)
-                            {
-                                list.Add(new CategoryDto(c));
-                                parentCategory = c.ParentCategory;
-                            }
-                        }
-                        return Ok(list);
-                    }
-                //}
-                return NotFound();
+                Console.WriteLine("GetCatsUpTheTree {0}/{1}", partitionKey, Id);
+                var categoryService = new CategoryService(dbService);
+                CategoryKey categoryKey = new(partitionKey, Id);
+                CategoryListEx categoryListEx = await categoryService.GetCatsUpTheTree(categoryKey);
+                Console.WriteLine(JsonConvert.SerializeObject(categoryListEx));
+                CategoryDtoListEx categoryDtoListEx = new(categoryListEx);
+                return Ok(categoryDtoListEx);
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                string msg = ex.Message;
+                Console.WriteLine(msg);
+                return BadRequest(new CategoryDtoListEx( new CategoryListEx(null, msg) ));
             }
         }
 
@@ -77,19 +58,20 @@ namespace NewKnowledgeAPI.Categories.Controllers
             // hidrate collections except questions
             try
             {
+                CategoryKey categoryKey = new(partitionKey, id);
                 // TODO what does  /partitionKey mean?
                 //using (var db = new Db(this.Configuration))
                 //{
                     //await db.Initialize;
                     //var category = new Category(db);
                 var categoryService = new CategoryService(dbService);
-                Category cat = await categoryService.GetCategory(partitionKey, id, hidrate, 0, null);
-                if (cat != null)
+                CategoryEx categoryEx = await categoryService.GetCategory(categoryKey, hidrate, 0, null);
+                if (categoryEx.category != null)
                 {
-                    return Ok(new CategoryDto(cat));
+                    return Ok(new CategoryDtoEx(categoryEx));
                 }
                 //}
-                return NotFound();
+                return NotFound(new CategoryDtoEx(categoryEx));
             }
             catch (Exception ex)
             {
