@@ -150,9 +150,8 @@ namespace NewKnowledgeAPI.Questions
         public async Task<QuestionEx> GetQuestion(string PartitionKey, string Id)
         {
             var myContainer = await container();
-
             Question? question = null;
-            string msg = "";
+            string msg = string.Empty;
             try
             {
                 Console.WriteLine($"*****************************  {PartitionKey}/{Id}");
@@ -161,6 +160,7 @@ namespace NewKnowledgeAPI.Questions
                     Id,
                     new PartitionKey(PartitionKey)
                 );
+                return new QuestionEx(question, msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
@@ -175,7 +175,7 @@ namespace NewKnowledgeAPI.Questions
             }
             Console.WriteLine(JsonConvert.SerializeObject(question));
             Console.WriteLine("*****************************");
-            return new QuestionEx(question, msg);
+            return new QuestionEx(null, msg);
         }
 
        
