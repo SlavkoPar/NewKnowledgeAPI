@@ -2,8 +2,11 @@
 using Microsoft.Azure.Cosmos;
 using System.Net;
 using Newtonsoft.Json;
-using NewKnowledgeAPI.Categories.Model;
-using NewKnowledgeAPI.Categories;
+using NewKnowledgeAPI.Q.Categories.Model;
+using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.Q;
+using NewKnowledgeAPI.A;
+using NewKnowledgeAPI.A.Groups.Model;
 
 namespace Knowledge.Services
 {
@@ -117,7 +120,6 @@ namespace Knowledge.Services
 
         private async Task<bool> AddInitialData()
         {
-            //List<CategoryData> list = [];
             try
             {
                 var categoryService = new CategoryService(this);
@@ -132,6 +134,28 @@ namespace Knowledge.Services
                     Console.WriteLine("ADDING CATEGORIESSS {0}", categoryData.Id);
                     await categoryService.AddCategory(categoryData);
                 }
+                //return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+                return false;
+            }
+
+            try
+            {
+                var groupService = new GroupService(this);
+                using StreamReader r = new("InitialData/groups-answers.json");
+                string json = r.ReadToEnd();
+                GroupsData? groupsData = JsonConvert.DeserializeObject<GroupsData>(json);
+                foreach (var groupData in groupsData!.Groups)
+                {
+                    groupData.PartitionKey = groupData.Id;
+                    groupData.ParentGroup = null;
+                    groupData.Level = 1;
+                    Console.WriteLine("ADDING GROUPSSSS {0}", groupData.Id);
+                    await groupService.AddGroup(groupData);
+                }
                 return true;
             }
             catch (Exception ex)
@@ -139,6 +163,7 @@ namespace Knowledge.Services
                 Console.WriteLine(ex.Message);
                 return false;
             }
+
         }
 
 

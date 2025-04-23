@@ -1,0 +1,142 @@
+{
+  "Groups": [
+    {
+      "Id": "PRODAJA",
+      "Title": "Prodaja",
+      "Kind": 2,
+      "Groups": [
+        {
+          "Id": "INTERNET",
+          "Title": "Internet",
+          "Kind": 3,
+          "Groups": [
+            {
+              "Id": "CLOUD",
+              "Title": "Cloud",
+              "Answers": [
+                { "Title": "Zaboravili ste pravila za naziv domena?" },
+                { "Title": "Ko može da registruje internacionalni domen (.com, .net, .org, .info…)?" },
+                { "Title": "Da li je moguća rezervacija domena pre uplate?" },
+                { "Title": "Da li prilikom registracije domena omogućavate uslugu DNS parking domena?" },
+                { "Title": "Želim da postanem reseller domena i cPanel hosting paketa" },
+                { "Title": "Ko sve može da registruje .СРБ domen?" },
+                { "Title": "Da li mogu da koristim email na svom ćiriličnom domenu?" }
+              ]
+            },
+            {
+              "Id": "DOMAIN",
+              "Title": "Domain",
+              "Answers": [
+              ]
+            },
+            {
+              "Id": "WEB",
+              "Title": "Web hosting",
+              "Answers": []
+            }
+          ]
+        },
+        {
+          "Id": "TV",
+          "Title": "Televizija",
+          "Kind": 3,
+          "Groups": [
+            {
+              "Id": "INSTALATION",
+              "Title": "Instalacija",
+              "Answers": [
+                { "Title": "Kako da povežem EON Smart Box?" },
+                { "Title": "Kako da preimenujem EON Smart Box?" },
+                { "Title": "Kako da uparim EON daljinski upravljač i EON" },
+                { "Title": "Kako da povežem digitalni prijemnik D3miniSmart Box?" }
+              ]
+            },
+            {
+              "Id": "USAGE",
+              "Title": "Usage",
+              "Kind": 3,
+              "Answers": [
+                {
+                  "Title": "Remote controller of EON smart box-a, doesn't work",
+                  "assignedAnswers": [ 16, 20, 17, 28 ]
+                },
+                { "Title": "Podešavanje pozicije ekrana na EON smart box-ukomande" },
+                { "Title": "Podešavanje i promena jezika titla na EON smart box-u" },
+                { "Title": "Podešavanje zvuka na EON smart box-u" },
+                { "Title": "Pokvario mi se D3mini daljinski" },
+                { "Title": "Changed bateries, but it still doesn't work" },
+                { "Title": "Dajte mi listu poslovnica (ne standova)" },
+                {
+                  "Title": "Nothing works and no one knows why",
+                  "assignedAnswers": [ 20, 28 ]
+                }
+              ]
+            },
+            {
+              "Id": "CHANEL-INFO",
+              "Title": "Informacije o kanalima",
+              "Kind": 3,
+              "Answers": [
+                { "Title": "Programski vodič i pregled TV kanala na EON smart boksu" },
+                { "Title": "Kako da koristim TV unazad na EON smart box-u?" },
+                { "Title": "Roditeljska kontrola i promena PIN kod-a na EON smart boksu" },
+                { "Title": "Kako da blokiram kanal?" },
+                { "Title": "Kako da koristim roditeljsku kontrolu?" }
+              ]
+            },
+            {
+              "Id": "VIDEO",
+              "Title": "Video klub",
+              "Variations": [ "MTS", "SBB", "A1", "YETTEL" ],
+              "Answers": [
+                { "Title": "Napravi liste omiljenih TV sadržaja i kanala na EON Smart Boxu" },
+                { "Title": "Glasovna pretraga filmova, kanala i sadržaja EON daljinskim upravljačem" },
+                { "Title": "Gledaj Pickbox" }
+              ]
+            },
+            {
+              "Id": "TV-UNAZAD",
+              "Title": "TV Unazad",
+              "Answers": [
+                { "Title": "Kako da koristim TV unazad na EON smart box-u?" }
+              ]
+            }
+          ]
+        },
+        {
+          "Id": "USLUGE",
+          "Title": "Ostale usluge",
+          "Answers": [
+            {
+              "Title": "Does you play often?"
+            }
+          ]
+        },
+        {
+          "Id": "WANTED",
+          "Title": "Najtraženije teme",
+          "Answers": [
+            { "Title": "Promeni ime i lozinku svoje WiFi mreže Cisco EPC" },
+            { "Title": "Kako da podnesem zahtev za prenos broja u SBB mrežu?" },
+            { "Title": "xxxxx" }
+          ]
+        }
+      ] 
+    },
+    {
+      "Id": "RACUNI",
+      "Title": "Računi i naplata",
+      "Kind": 2
+    },
+    {
+      "Id": "TECHNICAL",
+      "Title": "Technical Support",
+      "Kind": 2
+    },
+    {
+      "Id": "INFO",
+      "Title": "Information",
+      "Kind": 2
+    }
+  ]
+}
