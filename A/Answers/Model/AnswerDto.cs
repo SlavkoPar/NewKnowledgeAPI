@@ -13,8 +13,6 @@ namespace NewKnowledgeAPI.A.Answers.Model
         public string Title { get; set; }
         public string? GroupTitle { get; set; }
         public string? ParentGroup { get; set; }
-        public List<long>? AssignedAnswers { get; set; }
-        public int NumOfAssignedAnswers { get; set; }
         public int Source { get; set; }
         public int Status { get; set; }
 
@@ -32,8 +30,6 @@ namespace NewKnowledgeAPI.A.Answers.Model
             Title = answer.Title;
             GroupTitle = answer.GroupTitle;
             ParentGroup = answer.ParentGroup;
-            AssignedAnswers = answer.AssignedAnswers;
-            NumOfAssignedAnswers = answer.NumOfAssignedAnswers;
             Source = answer.Source;
             Status = answer.Status;
         }

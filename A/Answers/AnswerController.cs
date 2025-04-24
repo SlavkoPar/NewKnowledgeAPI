@@ -86,7 +86,7 @@ namespace NewKnowledgeAPI.A.Answers
         }
 
         [HttpGet("{filter}/{count}/{nesto}")]
-        public async Task<IActionResult> GetAnss(string filter, int count, string nesto)
+        public async Task<IActionResult> GetAnswers(string filter, int count, string nesto)
         {
             Console.WriteLine("GetAnss", filter, count, nesto);
             try
@@ -97,7 +97,7 @@ namespace NewKnowledgeAPI.A.Answers
                                 .Where(w => w.Length > 2)
                                 .ToList();
                 var answerService = new AnswerService(dbService);
-                List<AnsDto> anss = await answerService.GetAnss(words, count);
+                List<AnsDto> anss = await answerService.GetAnswers(words, count);
                 return Ok(anss);
             }
             catch (Exception ex)
@@ -122,7 +122,7 @@ namespace NewKnowledgeAPI.A.Answers
                 AnswerEx answerEx = await answerService.CreateAnswer(answerDto);
                 Console.WriteLine("*********=====>>>>>> answerEx");
                 Console.WriteLine(JsonConvert.SerializeObject(answerEx));
-                var answer = answerEx.answer;
+                var (answer, msg) = answerEx;
                 if (answer != null)
                 {
                     //Group group = new Group(answerEx.answer);

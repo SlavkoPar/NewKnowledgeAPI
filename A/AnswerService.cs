@@ -84,7 +84,8 @@ namespace NewKnowledgeAPI.A
 
         public async Task<AnswerEx> AddNewAnswer(Answer answer)
         {
-            var (PartitionKey, Id, Title, ParentAnswer, Kind, Level, Variations, Answers) = answer;
+            var (PartitionKey, Id, Title, ParentGroup, Type, Source, Status) = answer;
+
             var myContainer = await container();
             string msg = string.Empty;
             try
@@ -134,8 +135,8 @@ namespace NewKnowledgeAPI.A
             var myContainer = await container();
             try
             {
-                Answer q = new(answerDto);
-                AnswerEx answerEx = await AddNewAnswer(q);
+                Answer a = new(answerDto);
+                AnswerEx answerEx = await AddNewAnswer(a);
                 return answerEx;
             }
             catch (Exception ex)
@@ -355,7 +356,7 @@ namespace NewKnowledgeAPI.A
             return new AnswersMore([], false);
         }
 
-        public async Task<List<AnsDto>> GetAnss(List<string> words, int count)
+        public async Task<List<AnsDto>> GetAnswers(List<string> words, int count)
         {
             var myContainer = await container();
             try
