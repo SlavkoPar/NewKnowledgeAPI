@@ -4,9 +4,10 @@ using Microsoft.Azure.Cosmos;
 using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 using NewKnowledgeAPI.A.Answers.Model;
+using System.Collections.Generic;
 
 
-namespace NewKnowledgeAPI.A
+namespace NewKnowledgeAPI.A.Answers
 {
     public class AnswerService : IDisposable
     {
@@ -356,12 +357,12 @@ namespace NewKnowledgeAPI.A
             return new AnswersMore([], false);
         }
 
-        public async Task<List<AnsDto>> GetAnswers(List<string> words, int count)
+        public async Task<List<ShortAnswerDto>> GetShortAnswers(List<string> words, int count)
         {
             var myContainer = await container();
             try
             {
-                var sqlQuery = $"SELECT c.ParentGroup, c.Title, c.id FROM c WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND ";
+                var sqlQuery = $"SELECT c.partitionKey, c.ParentGroup, c.Title, c.id FROM c WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND ";
                 if (words.Count == 1)
                 {
                     sqlQuery += $" CONTAINS(c.Title, \"{words[0]}\", true) ";
@@ -381,21 +382,21 @@ namespace NewKnowledgeAPI.A
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
 
 
-                List<AnsDto> anss = [];
+                List<ShortAnswerDto> shortAnswers = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                using (FeedIterator<Answer> queryResultSetIterator = 
-                    myContainer!.GetItemQueryIterator<Answer>(queryDefinition))
+                using (FeedIterator<ShortAnswer> queryResultSetIterator = 
+                    myContainer!.GetItemQueryIterator<ShortAnswer>(queryDefinition))
                 {
                     while (queryResultSetIterator.HasMoreResults)
                     {
-                        FeedResponse<Answer> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                        foreach (Answer answer in currentResultSet)
+                        FeedResponse<ShortAnswer> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                        foreach (ShortAnswer shortAnswer in currentResultSet)
                         {
-                            anss.Add(new AnsDto(answer));
+                            shortAnswers.Add(new ShortAnswerDto(shortAnswer));
                         }
                     }
                 }
-                return anss;
+                return shortAnswers;
             }
             catch (Exception ex)
             {
@@ -404,7 +405,44 @@ namespace NewKnowledgeAPI.A
             }
             return [];
         }
-           
+
+
+        public async Task<Dictionary<string, string>> GetTitles(List<string> answerIds)
+        {
+            var myContainer = await container();
+            try
+            {
+                string str = string.Join(",", answerIds.ToArray());
+
+                // OR c.ParentGroup = ''
+                string sqlQuery = $"SELECT c.id, c.Title FROM c " + 
+                    $" WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND " +
+                    $" c.Id IN ({str}) ORDER BY c.Title OFFSET LIMIT 100";
+
+                //Console.WriteLine("************ sqlQuery{0}", sqlQuery);
+
+                List<AnswerTitle> answerTitles = [];
+                QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
+                FeedIterator<AnswerTitle> queryResultSetIterator = myContainer!.GetItemQueryIterator<AnswerTitle>(queryDefinition);
+                while (queryResultSetIterator.HasMoreResults)
+                {
+                    FeedResponse<AnswerTitle> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                    foreach (AnswerTitle answerTitle in currentResultSet)
+                    {
+                        //Console.WriteLine(">>>>>>>> answer is: {0}", JsonConvert.SerializeObject(answer));
+                        answerTitles.Add(answerTitle);
+                    }
+                    return answerTitles.ToDictionary(x => x.Id, x => x.Title);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this reans.
+                Console.WriteLine(ex.Message);
+            }
+            return answerIds.Select(x => (new AnswerTitle(x, "unk"))).ToDictionary(x => x.Id, x => x.Title);
+        }
+
 
         public void Dispose()
         {

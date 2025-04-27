@@ -8,6 +8,7 @@ using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
 using NewKnowledgeAPI.A.Groups.Model;
 using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.A.Groups;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -88,7 +89,7 @@ namespace NewKnowledgeAPI.A.Answers
         [HttpGet("{filter}/{count}/{nesto}")]
         public async Task<IActionResult> GetAnswers(string filter, int count, string nesto)
         {
-            Console.WriteLine("GetAnss", filter, count, nesto);
+            Console.WriteLine("GetShortAnswers", filter, count, nesto);
             try
             {
                 var words = filter //.ToLower()
@@ -97,8 +98,8 @@ namespace NewKnowledgeAPI.A.Answers
                                 .Where(w => w.Length > 2)
                                 .ToList();
                 var answerService = new AnswerService(dbService);
-                List<AnsDto> anss = await answerService.GetAnswers(words, count);
-                return Ok(anss);
+                List<ShortAnswerDto> answers = await answerService.GetShortAnswers(words, count);
+                return Ok(answers);
             }
             catch (Exception ex)
             {

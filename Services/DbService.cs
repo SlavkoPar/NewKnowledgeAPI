@@ -7,6 +7,8 @@ using NewKnowledgeAPI.A.Answers.Model;
 using NewKnowledgeAPI.Q;
 using NewKnowledgeAPI.A;
 using NewKnowledgeAPI.A.Groups.Model;
+using NewKnowledgeAPI.Q.Categories;
+using NewKnowledgeAPI.A.Groups;
 
 namespace Knowledge.Services
 {

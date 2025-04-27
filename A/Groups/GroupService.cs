@@ -6,8 +6,9 @@ using Newtonsoft.Json;
 using System.Net;
 using NewKnowledgeAPI.A.Groups.Model;
 using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.A.Answers;
 
-namespace NewKnowledgeAPI.A
+namespace NewKnowledgeAPI.A.Groups
 {
     public class GroupService : IDisposable
     {

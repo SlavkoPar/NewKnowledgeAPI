@@ -17,8 +17,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         //}
         public QuestionDtoEx(QuestionEx questionEx)
         {
-            questionDto = questionEx.question != null ? new QuestionDto(questionEx.question!) : null;
-            msg = questionEx.msg!;
+            var (question, msg) = questionEx;
+            questionDto = question != null ? new QuestionDto(question) : null;
+            this.msg = msg;
         }
 
         public QuestionDtoEx(string msg)
@@ -28,9 +29,14 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         }
 
 
-
         public QuestionDto? questionDto { get; set; }
         public string msg { get; set; }
+
+        internal void Deconstruct(out QuestionDto questionDto, out string msg)
+        {
+            questionDto = this.questionDto;
+            msg = this.msg;
+        }
     }
 
 }

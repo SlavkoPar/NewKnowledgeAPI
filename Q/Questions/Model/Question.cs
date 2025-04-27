@@ -16,7 +16,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public string? CategoryTitle { get; set; }
         public string Title { get; set; }
         public string? ParentCategory { get; set; }
-        public List<long> AssignedAnswers { get; set; }
+        public List<AssignedAnswer> AssignedAnswers { get; set; }
         public int NumOfAssignedAnswers  {get; set;}
         public int Source { get; set; }
         public int Status { get; set; }
@@ -53,8 +53,8 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             ParentCategory = questionDto.ParentCategory;
             CategoryTitle = null;
             Title = questionDto.Title;
-            AssignedAnswers = questionDto.AssignedAnswers!;
-            NumOfAssignedAnswers = questionDto.NumOfAssignedAnswers;
+            //AssignedAnswers = questionDto.AssignedAnswers!;
+            //NumOfAssignedAnswers = questionDto.NumOfAssignedAnswers;
             Source = questionDto.Source;
             Status = questionDto.Status;    
         }
@@ -63,7 +63,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         //    $"{PartitionKey}/{Id}, {Title} {ParentCategory} ";
 
         public void Deconstruct(out string partitionKey, out string id, out string title, out string? parentCategory,
-                                out string type, out int source, out int status, out List<long> assignedAnswers)
+                                out string type, out int source, out int status, out List<AssignedAnswer> assignedAnswers)
         {
             partitionKey = PartitionKey;
             id = Id;

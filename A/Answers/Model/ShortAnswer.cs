@@ -5,23 +5,15 @@ using System.Net;
 
 namespace NewKnowledgeAPI.A.Answers.Model
 {
-    public class AnsDto
+    public class ShortAnswer
     {
         public string PartitionKey { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
         public string ParentGroup { get; set; }
 
-        public AnsDto()
+        public ShortAnswer()
         {
-        }
-
-        public AnsDto(Answer answer)
-        {
-            PartitionKey = answer.PartitionKey;
-            ParentGroup = answer.ParentGroup!;
-            Id = answer.Id;
-            Title = answer.Title;
         }
 
     }

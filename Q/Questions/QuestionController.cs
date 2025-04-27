@@ -8,6 +8,9 @@ using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
 using NewKnowledgeAPI.Q.Categories.Model;
 using NewKnowledgeAPI.Q.Questions.Model;
+using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.Q.Categories;
+using NewKnowledgeAPI.A.Answers;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -45,7 +48,7 @@ namespace NewKnowledgeAPI.Q.Questions
                 {
                     var questionService = new QuestionService(dbService);
                     QuestionsMore questionsMore = await questionService.GetQuestions(parentCategory, startCursor, pageSize, includeQuestionId);
-                    Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", questionsMore.questions.Count);
+                    //Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", questionsMore.questions.Count);
                     CategoryDto categoryDto = new(categoryKey, questionsMore);
                     categoryDto.Title = category.Title;
                     return Ok(new CategoryDtoEx(categoryDto, msg));
@@ -66,17 +69,15 @@ namespace NewKnowledgeAPI.Q.Questions
             {
                 var categoryService = new CategoryService(dbService);
                 var questionService = new QuestionService(dbService);
-                QuestionEx questionEx = await questionService.GetQuestion(partitionKey, id);
+                var answerService = new AnswerService(dbService);
+
+                QuestionKey questionKey = new(partitionKey, id);
+                QuestionEx questionEx = await questionService.GetQuestion(questionKey);
                 var (question, msg) = questionEx;
                 if (question == null)
                     return NotFound(new QuestionDtoEx(questionEx));
-                CategoryKey categoryKey = new(partitionKey, question.ParentCategory!);
-                // get category Title
-                CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
-                var (category, message) = categoryEx;
-                question.CategoryTitle = category != null 
-                    ? category.Title
-                    : "NotFound Category";
+
+                question = await questionService.SetAnswerTitles(question, categoryService, answerService);
                 return Ok(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)
@@ -113,15 +114,15 @@ namespace NewKnowledgeAPI.Q.Questions
         {
             try
             {
-                Console.WriteLine("*********=====>>>>>> questionDto");
-                Console.WriteLine(JsonConvert.SerializeObject(questionDto));
+                //Console.WriteLine("*********=====>>>>>> questionDto");
+                //Console.WriteLine(JsonConvert.SerializeObject(questionDto));
 
                 var categoryService = new CategoryService(dbService);
                 var questionService = new QuestionService(dbService);
 
                 QuestionEx questionEx = await questionService.CreateQuestion(questionDto);
-                Console.WriteLine("*********=====>>>>>> questionEx");
-                Console.WriteLine(JsonConvert.SerializeObject(questionEx));
+                //Console.WriteLine("*********=====>>>>>> questionEx");
+                //Console.WriteLine(JsonConvert.SerializeObject(questionEx));
                 var question = questionEx.question;
                 if (question != null)
                 {

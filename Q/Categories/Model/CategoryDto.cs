@@ -40,7 +40,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Level = 1;
             Variations = [];
 
-            Console.WriteLine("pitanja {0}", questionsMore.questions.Count);
+            //Console.WriteLine("pitanja {0}", questionsMore.questions.Count);
             //if (questionsMore.questions.Count > 0) {
             //    Question q = questionsMore.questions.First();
             //}

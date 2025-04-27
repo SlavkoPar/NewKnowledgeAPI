@@ -3,11 +3,12 @@ using Knowledge.Services;
 using Microsoft.Azure.Cosmos;
 using NewKnowledgeAPI.Common;
 using NewKnowledgeAPI.Q.Categories.Model;
+using NewKnowledgeAPI.Q.Questions;
 using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 using System.Net;
 
-namespace NewKnowledgeAPI.Q
+namespace NewKnowledgeAPI.Q.Categories
 {
     public class CategoryService : IDisposable
     {

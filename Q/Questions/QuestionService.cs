@@ -1,12 +1,15 @@
 ﻿using System.Net;
 using Knowledge.Services;
 using Microsoft.Azure.Cosmos;
+using NewKnowledgeAPI.A.Answers;
 using NewKnowledgeAPI.Common;
+using NewKnowledgeAPI.Q.Categories.Model;
+using NewKnowledgeAPI.Q.Categories;
 using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 
 
-namespace NewKnowledgeAPI.Q
+namespace NewKnowledgeAPI.Q.Questions
 {
     public class QuestionService : IDisposable
     {
@@ -146,13 +149,14 @@ namespace NewKnowledgeAPI.Q
             }
         }
 
-        public async Task<QuestionEx> GetQuestion(string PartitionKey, string Id)
+        public async Task<QuestionEx> GetQuestion(QuestionKey questionKey)
         {
             var myContainer = await container();
             Question? question = null;
             string msg = string.Empty;
             try
             {
+                var (PartitionKey, Id) = questionKey;
                 Console.WriteLine($"*****************************  {PartitionKey}/{Id}");
                 // Read the item to see if it exists.  
                 question = await myContainer.ReadItemAsync<Question>(
@@ -179,8 +183,13 @@ namespace NewKnowledgeAPI.Q
 
        
 
-        public async Task<QuestionEx> UpdateQuestion(QuestionDto questionDto)
+        public async Task<QuestionEx> UpdateQuestion(QuestionDto questionDto, List<AssignedAnswer>? assignedAnswers = null)
         {
+            Console.WriteLine("========================UpdateQuestion-1");
+            Console.WriteLine(JsonConvert.SerializeObject(questionDto));
+            Console.WriteLine("========================UpdateQuestion-2");
+            Console.WriteLine(JsonConvert.SerializeObject(assignedAnswers));
+            Console.WriteLine("========================UpdateQuestion-3");
             var myContainer = await container();
             try
             {
@@ -209,6 +218,11 @@ namespace NewKnowledgeAPI.Q
                 }
                 if (doUpdate)
                 {
+                    if (assignedAnswers != null)
+                    {
+                        question.AssignedAnswers = assignedAnswers;
+                        question.NumOfAssignedAnswers = assignedAnswers.Count;
+                    }
                     question.Source = questionDto.Source;
                     question.Status = questionDto.Status;
                     question.Modified = new WhoWhen(questionDto.Modified!);
@@ -228,7 +242,7 @@ namespace NewKnowledgeAPI.Q
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 Console.WriteLine(ex.Message);
             }
-            return new QuestionEx(null, "Server Problem");
+            return new QuestionEx(null, "Server Problem Update");
         }
 
         public async Task<QuestionEx> DeleteQuestion(QuestionDto questionDto)
@@ -272,40 +286,8 @@ namespace NewKnowledgeAPI.Q
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 Console.WriteLine(ex.Message);
             }
-            return new QuestionEx(null, "Server Problem");
+            return new QuestionEx(null, "Server Problem Delete");
         }
-
-        /*
-        public async Task<string> DeleteQuestion(QuestionDto questionDto)
-        {
-            var myContainer = await container();
-            try
-            {
-                // Read the item to see if it exists.
-
-                ItemResponse<Question> aResponse =
-                    await myContainer!.ReadItemAsync<Question>(
-                        questionDto.Id,
-                        new PartitionKey(questionDto.PartitionKey)
-                    );
-                Question question = aResponse.Resource;
-                aResponse = await myContainer.DeleteItemAsync<Question>(question.Id, new PartitionKey(question.PartitionKey));
-                Console.WriteLine("Deleted Question [{0},{1}].\n \tBody is now: {2}\n", question.Title, question.Id, question);
-                return "OK";
-            }
-            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-            {
-                Console.WriteLine("Question item {0} NotFound in database.\n", questionKey.Id); //, aResponse.RequestCharge);
-                return "NotFound";
-            }
-            catch (Exception ex)
-            {
-                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
-                return ex.Message;
-            }
-        }
-        */
 
         public async Task<QuestionsMore> GetQuestions(string parentCategory, int startCursor, int pageSize, string includeQuestionId)
         {
@@ -319,7 +301,7 @@ namespace NewKnowledgeAPI.Q
                     ? $"LIMIT {pageSize}"
                     : $"LIMIT 9999";
 
-                Console.WriteLine("************ sqlQuery{0}", sqlQuery);
+                //Console.WriteLine("************ sqlQuery{0}", sqlQuery);
 
                 int n = 0;
                 bool included = false;
@@ -336,7 +318,7 @@ namespace NewKnowledgeAPI.Q
                         {
                             included = true;
                         }
-                        Console.WriteLine(">>>>>>>> question is: {0}", JsonConvert.SerializeObject(question));
+                        //Console.WriteLine(">>>>>>>> question is: {0}", JsonConvert.SerializeObject(question));
                         questions.Add(question);
                         n++;
                         if (n >= pageSize && (includeQuestionId == null || included))
@@ -404,6 +386,54 @@ namespace NewKnowledgeAPI.Q
             return [];
         }
            
+
+        public async Task<QuestionDtoEx> AssignAnswer(AssignedAnswerDto assignedAnswerDto, 
+            CategoryService categoryService,
+            AnswerService answerService)
+        {
+            // Extract properties from the AssignedAnswerDto object
+            var (questionKey, answerKey, created) = assignedAnswerDto;
+
+            // Use the extracted properties as needed
+            QuestionEx questionEx = await GetQuestion(questionKey);
+            var (question, msg) = questionEx;
+            if (question != null)
+            {
+                var assignedAnswers = question.AssignedAnswers ?? new List<AssignedAnswer>();
+                assignedAnswers.Add(new AssignedAnswer(assignedAnswerDto));
+                question = await SetAnswerTitles(question, categoryService, answerService);
+                var questionDto = new QuestionDto(question);
+                questionDto.Modified = created;
+                questionEx = await UpdateQuestion(questionDto, assignedAnswers);
+                var (q, message) = questionEx;
+                //if (q != null)
+                //{
+                //    QuestionDtoEx questionDtoEx = new(questionEx);
+                //    return questionDtoEx;
+                //}
+            }
+            return new QuestionDtoEx(questionEx);
+        }
+
+        public async Task<Question> SetAnswerTitles(Question question, CategoryService categoryService, AnswerService answerService)
+        {
+            var (PartitionKey, Id, Title, ParentQuestion, Kind, Level, Variations, Questions) = question;
+            CategoryKey categoryKey = new(PartitionKey, question.ParentCategory!);
+            // get category Title
+            CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
+            var (category, message) = categoryEx;
+            question.CategoryTitle = category != null ? category.Title : "NotFound Category";
+
+            if (question.AssignedAnswers.Count > 0)
+            {
+                var answerIds = question.AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
+                Dictionary<string, string> answerTitles = await answerService.GetTitles(answerIds);
+                foreach (var assignedAnswer in question.AssignedAnswers)
+                    assignedAnswer.AnswerTitle = answerTitles[assignedAnswer.AnswerKey.Id];
+            }
+
+            return question;
+        }
 
         public void Dispose()
         {
