@@ -34,26 +34,62 @@ namespace NewKnowledgeAPI.Q.Questions
         }
 
 
-        [HttpPost]
+        [HttpPost("Assign")]
         [Authorize]
         public async Task<IActionResult> AssignAnswer([FromBody] AssignedAnswerDto assignedAnswerDto)
         {
             try
             {
-                Console.WriteLine("*********=====>>>>>>>>>>>>>>>>>>>> assignedAnswerDto");
+                Console.WriteLine("*********=====>>>>>>>> ASSIGN >>>>>>>>>>>> assignedAnswerDto");
                 Console.WriteLine(JsonConvert.SerializeObject(assignedAnswerDto));
 
-                var categoryService = new CategoryService(dbService);
-                var answerService = new AnswerService(dbService);
                 var questionService = new QuestionService(dbService);
 
-                QuestionDtoEx questionDtoEx = await questionService.AssignAnswer(assignedAnswerDto, categoryService, answerService);
-                var (questionDto, msg) = questionDtoEx;
+                QuestionEx questionEx = await questionService.AssignAnswer(assignedAnswerDto);
+                var (question, msg) = questionEx;
                 Console.WriteLine("*********=====>>>>>> questionEx");
-                Console.WriteLine(JsonConvert.SerializeObject(questionDtoEx));
-                return questionDto != null 
-                    ? Ok(questionDtoEx) 
-                    : NotFound(questionDtoEx);
+                Console.WriteLine(JsonConvert.SerializeObject(questionEx));
+
+                if (question != null)
+                {
+                    var categoryService = new CategoryService(dbService);
+                    var answerService = new AnswerService(dbService);
+                    Question q = await questionService.SetAnswerTitles(question, categoryService, answerService);
+                    return Ok(new QuestionDtoEx(new QuestionEx(q, "")));
+                }
+
+                return NotFound(new QuestionDtoEx(questionEx));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+
+        [HttpPost("UnAssign")]
+        [Authorize]
+        public async Task<IActionResult> UnAssignAnswer([FromBody] AssignedAnswerDto assignedAnswerDto)
+        {
+            try
+            {
+                Console.WriteLine("*********=====>>>>> UNASSIGN >>>>>>>>>>>>>>> assignedAnswerDto");
+                Console.WriteLine(JsonConvert.SerializeObject(assignedAnswerDto));
+
+                var questionService = new QuestionService(dbService);
+                QuestionEx questionEx = await questionService.UnAssignAnswer(assignedAnswerDto);
+                Console.WriteLine("*********=====>>>>>> questionEx");
+                Console.WriteLine(JsonConvert.SerializeObject(questionEx));
+                var (question, msg) = questionEx;
+                if (question != null)
+                {
+                    var categoryService = new CategoryService(dbService);
+                    var answerService = new AnswerService(dbService);
+                    var q = await questionService.SetAnswerTitles(question, categoryService, answerService);
+                    return Ok(new QuestionDtoEx(new QuestionEx(q, "")));
+
+                }
+                return NotFound(new QuestionDtoEx(questionEx));
 
             }
             catch (Exception ex)

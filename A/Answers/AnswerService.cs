@@ -412,13 +412,12 @@ namespace NewKnowledgeAPI.A.Answers
             var myContainer = await container();
             try
             {
-                string str = string.Join(",", answerIds.ToArray());
+                string str = string.Join("','", answerIds.ToArray());
 
                 // OR c.ParentGroup = ''
                 string sqlQuery = $"SELECT c.id, c.Title FROM c " + 
                     $" WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND " +
-                    $" c.Id IN ({str}) ORDER BY c.Title OFFSET LIMIT 100";
-
+                    $" ARRAY_CONTAINS(['{str}'], c.id, false)";
                 //Console.WriteLine("************ sqlQuery{0}", sqlQuery);
 
                 List<AnswerTitle> answerTitles = [];

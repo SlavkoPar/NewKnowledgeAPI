@@ -18,14 +18,22 @@ namespace NewKnowledgeAPI.Q.Questions.Model
   
         public AssignedAnswer(AssignedAnswerDto dto)
         {
-            Created = new WhoWhen(dto.Created);
-            AnswerKey = dto.AnswerKey;
-            AnswerTitle = null;
+            var (questionKey, answerKey, created, answerTitle) = dto; 
+            Created = new WhoWhen(created);
+            AnswerKey = answerKey;
+            AnswerTitle = answerTitle;
         }
 
         //public override string ToString() => 
         //    $"{PartitionKey}/{Id}, {Title} {ParentGroup} ";
 
+
+        internal void Deconstruct(out AnswerKey answerKey, out WhoWhen created, out string? answerTitle )
+        {
+            answerKey = AnswerKey;
+            created = Created;
+            answerTitle = AnswerTitle;
+        }
 
         public void Dispose()
         {

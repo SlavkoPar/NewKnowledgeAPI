@@ -37,7 +37,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             CategoryTitle = question.CategoryTitle;
             ParentCategory = question.ParentCategory;
             AssignedAnswerDtos = assignedAnswers
-                .Select(assigneAnswer => new AssignedAnswerDto(questionKey!, assigneAnswer))
+                .Select(assignedAnswer => new AssignedAnswerDto(assignedAnswer))
                 .ToList();
             NumOfAssignedAnswers = question.NumOfAssignedAnswers;
             Source = question.Source;

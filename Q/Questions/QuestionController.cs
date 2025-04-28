@@ -67,18 +67,17 @@ namespace NewKnowledgeAPI.Q.Questions
         {
             try
             {
-                var categoryService = new CategoryService(dbService);
+                var questionKey = new QuestionKey(partitionKey, id);
                 var questionService = new QuestionService(dbService);
-                var answerService = new AnswerService(dbService);
-
-                QuestionKey questionKey = new(partitionKey, id);
                 QuestionEx questionEx = await questionService.GetQuestion(questionKey);
                 var (question, msg) = questionEx;
                 if (question == null)
                     return NotFound(new QuestionDtoEx(questionEx));
 
-                question = await questionService.SetAnswerTitles(question, categoryService, answerService);
-                return Ok(new QuestionDtoEx(questionEx));
+                var categoryService = new CategoryService(dbService);
+                var answerService = new AnswerService(dbService);
+                var q = await questionService.SetAnswerTitles(question, categoryService, answerService);
+                return Ok(new QuestionDtoEx(new QuestionEx(q, "")));
             }
             catch (Exception ex)
             {
@@ -148,7 +147,7 @@ namespace NewKnowledgeAPI.Q.Questions
                 Console.WriteLine("===>>> UpdateQuestion: {0} \n", questionDto.Title);
                 var questionService = new QuestionService(dbService);
 
-                QuestionEx questionEx = await questionService.UpdateQuestion(questionDto);
+                QuestionEx questionEx = await questionService.UpdateQuestion(new Question(questionDto));
                 if (questionEx!.question != null)
                     return Ok(new QuestionDtoEx(questionEx));
                 return NotFound(new QuestionDtoEx(questionEx));
