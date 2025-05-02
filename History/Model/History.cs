@@ -1,9 +1,12 @@
-﻿using NewKnowledgeAPI.Common;
+﻿using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.Common;
 using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 
 namespace NewKnowledgeAPI.Hist.Model
 {
+    public enum USER_ANSWER_ACTION { NotFixed = 0, Fixed = 1, NotClicked = 2 };
+
     public class History : /*Record,*/ IDisposable
     {
         public string Type { get; set; }
@@ -14,10 +17,10 @@ namespace NewKnowledgeAPI.Hist.Model
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
 
-        public string QuestionId { get; set; }
-        public string AnswerId { get; set; }
-        public short Fixed { get; set; }
-        public string NickName { get; set; }
+        public QuestionKey QuestionKey { get; set; }
+        public AnswerKey AnswerKey { get; set; }
+        public short UserAction { get; set; }
+        public WhoWhen Created { get; set; }
 
 
         public static DateTime centuryBegin = new DateTime(2025, 1, 1);
@@ -26,7 +29,7 @@ namespace NewKnowledgeAPI.Hist.Model
             {
                 long elapsedTicks = DateTime.Now.Ticks - History.centuryBegin.Ticks;
                 TimeSpan elapsedSpan = new TimeSpan(elapsedTicks);
-                return elapsedSpan.TotalSeconds.ToString();
+                return elapsedSpan.Ticks.ToString();
             }
         }  
 
@@ -38,36 +41,37 @@ namespace NewKnowledgeAPI.Hist.Model
         public History(HistoryData historyData)
         {
             Type = "history";
-            PartitionKey = historyData.PartitionKey ?? "FindOut"; ;
+            PartitionKey = historyData.PartitionKey ?? "history";
             Id = History.GeneratedId;
-            QuestionId = historyData.QuestionId;
-            AnswerId = historyData.AnswerId;
-            Fixed = historyData.Fixed;
-            NickName = historyData.NickName ?? "Admin";
+            QuestionKey = historyData.QuestionKey;
+            AnswerKey = historyData.AnswerKey;
+            //Fixed = (short)historyData.UserAction;
+            Created = new WhoWhen(historyData.NickName ?? "Admin");
+            UserAction = (short)historyData.UserAction;
         }
 
         public History(HistoryDto historyDto)
         {
             Type = "history";
-            PartitionKey = historyDto.PartitionKey ?? "FindOut";
+            PartitionKey = historyDto.PartitionKey ?? "history";
             Id = History.GeneratedId;
-            QuestionId = historyDto.QuestionId;
-            AnswerId = historyDto.AnswerId;
-            Fixed = historyDto.Fixed;
-            NickName = historyDto.NickName ?? "Admin";
+            QuestionKey = historyDto.QuestionKey;
+            AnswerKey = historyDto.AnswerKey;
+            UserAction = historyDto.UserAction;
+            Created = new WhoWhen(historyDto.Created);
         }
 
         //public override string ToString() => 
         //    $"{PartitionKey}/{Id}, {Title} {ParentCategory} ";
 
-        public void Deconstruct(out string partitionKey, out string id, out string questionId, out string answerId, out short fixedValue, out string nickName)
+        public void Deconstruct(out string partitionKey, out string id, out QuestionKey questionKey, out AnswerKey answerKey, out short userAction, out WhoWhen created)
         {
             partitionKey = PartitionKey;
             id = Id;
-            questionId = QuestionId;
-            answerId = AnswerId;
-            fixedValue = Fixed;
-            nickName = NickName;
+            questionKey = QuestionKey;
+            answerKey = AnswerKey;
+            userAction = UserAction;
+            created = Created;
         }
 
         public void Dispose()

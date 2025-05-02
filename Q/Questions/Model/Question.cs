@@ -13,7 +13,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
 
+        [JsonProperty(PropertyName = "CategoryTitle", NullValueHandling = NullValueHandling.Ignore)]
         public string? CategoryTitle { get; set; }
+
         public string Title { get; set; }
         public string? ParentCategory { get; set; }
         public List<AssignedAnswer> AssignedAnswers { get; set; }

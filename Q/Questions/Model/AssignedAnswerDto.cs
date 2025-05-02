@@ -13,34 +13,50 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public QuestionKey? QuestionKey { get; set; }
         public AnswerKey AnswerKey { get; set; }
         public WhoWhenDto Created { get; set; }
+        public WhoWhenDto? Modified { get; set; }
 
         public string? AnswerTitle { get; set; }
+        //public uint Fixed { get; set; } // num of clicks to Fixed
+        //public uint NotFixed { get; set; } // num of clicks to NotFixed
+        //public uint NotClicked { get; set; } // num of not clicked
 
         public AssignedAnswerDto()
         {
         }
 
-        public AssignedAnswerDto(AssignedAnswer assignedAnswer)
-        {
-            // Explicitly access properties instead of deconstruction
-            AnswerKey = assignedAnswer.AnswerKey;
-            Created = new WhoWhenDto(assignedAnswer.Created);
-            AnswerTitle = assignedAnswer.AnswerTitle;
-        }
+        //public AssignedAnswerDto(AssignedAnswer assignedAnswer)
+        //{
+        //    var (answerKey, created, answerTitle, Fixed, NotFixed, NotClicked) = assignedAnswer;
+        //    AnswerKey = answerKey;
+        //    Created = new WhoWhenDto(created);
+        //    AnswerTitle = answerTitle;
+        //    this.Fixed = Fixed;
+        //    this.NotFixed = NotFixed;
+        //    this.NotClicked = NotClicked;
+        //}
 
         public AssignedAnswerDto(QuestionKey questionKey, AssignedAnswer assignedAnswer)
         {
             QuestionKey = questionKey;
-            AnswerKey = assignedAnswer.AnswerKey;
-            Created = new WhoWhenDto(assignedAnswer.Created);
+            var (answerKey, answerTitle, created, modified, Fixed, NotFixed, NotClicked) = assignedAnswer;
+            AnswerKey = answerKey;
+            AnswerTitle = answerTitle;
+            Created = new WhoWhenDto(created);
+            Modified = new WhoWhenDto(modified);
         }
 
-        internal void Deconstruct(out QuestionKey? questionKey, out AnswerKey answerKey, out WhoWhenDto created, out string? answerTitle)
+        internal void Deconstruct(out QuestionKey? questionKey, 
+            out AnswerKey answerKey, out string? answerTitle, out WhoWhenDto created, out WhoWhenDto? modified)
+            //out uint Fixed, out uint NotFixed, out uint NotClicked)
         {
             questionKey = QuestionKey;
             answerKey = AnswerKey;
-            created = Created;
             answerTitle = AnswerTitle;
+            created = Created;
+            modified = Modified;
+            //Fixed = this.Fixed;
+            //NotFixed= this.NotFixed;
+            //NotClicked = this.NotClicked;
         }
     }
 

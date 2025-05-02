@@ -1,6 +1,8 @@
 ﻿using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Cosmos.Linq;
+using NewKnowledgeAPI.A.Answers.Model;
 using NewKnowledgeAPI.Common;
+using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 using System.Net;
 
@@ -8,28 +10,34 @@ namespace NewKnowledgeAPI.Hist.Model
 {
     public class HistoryDto //: RecordDto
     {
-        public string? PartitionKey { get; set; }
+
+        public string? Type { get; set; }
+
+        [JsonProperty(PropertyName = "id")]
         public string? Id { get; set; }
-        public string QuestionId { get; set; }
-        public string AnswerId { get; set; }
-        public short Fixed { get; set; }
-        public string NickName { get; set; }
+
+        [JsonProperty(PropertyName = "partitionKey")]
+        public string? PartitionKey { get; set; }
+
+        public QuestionKey QuestionKey { get; set; }
+        public AnswerKey AnswerKey { get; set; }
+        public short UserAction { get; set; }
+        public WhoWhenDto Created { get; set; }
 
 
         public HistoryDto()
-            //: base()
         {
         }
 
         public HistoryDto(History history)
-            //: base(history.Created, null, null)
         {
             //Console.WriteLine(JsonConvert.SerializeObject(history));
-            PartitionKey = history.PartitionKey;
-            Id = history.Id;
-            QuestionId = history.QuestionId;
-            AnswerId = history.AnswerId;
-            Fixed = history.Fixed;
+            //PartitionKey = history.PartitionKey;
+            //Id = history.Id;
+            QuestionKey = history.QuestionKey;
+            AnswerKey = history.AnswerKey;
+            UserAction = history.UserAction;
+            Created = new WhoWhenDto(history.Created);
         }
     }
  }

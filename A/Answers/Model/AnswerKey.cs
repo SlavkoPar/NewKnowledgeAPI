@@ -4,13 +4,40 @@ using System.Diagnostics.Metrics;
 
 namespace NewKnowledgeAPI.A.Answers.Model
 {
-    public class AnswerKey
+    public class AnswerKey : IEquatable<AnswerKey>
     {
-        public string Id { get; set; }
         public string PartitionKey { get; set; }
+        public string Id { get; set; }
 
         public AnswerKey()
         {
+        }
+
+        public override bool Equals(object obj) => this.Equals(obj as AnswerKey);
+
+        public bool Equals(AnswerKey key)
+        {
+            if (key is null)
+            {
+                return false;
+            }
+
+            // Optimization for a common success case.
+            if (Object.ReferenceEquals(this, key))
+            {
+                return true;
+            }
+
+            // If run-time types are not exactly the same, return false.
+            if (this.GetType() != key.GetType())
+            {
+                return false;
+            }
+
+            // Return true if the fields match.
+            // Note that the base class is not invoked because it is
+            // System.Object, which defines Equals as reference equality.
+            return (PartitionKey == key.PartitionKey) && (Id == key.Id);
         }
     }
 

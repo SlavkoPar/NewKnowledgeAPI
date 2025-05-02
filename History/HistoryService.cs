@@ -4,6 +4,10 @@ using Microsoft.Azure.Cosmos;
 using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 using NewKnowledgeAPI.Hist.Model;
+using NewKnowledgeAPI.Q.Questions.Model;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using NewKnowledgeAPI.Q.Questions;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace NewKnowledgeAPI.Hist
 {
@@ -118,21 +122,111 @@ namespace NewKnowledgeAPI.Hist
         }
 
 
-        public async Task<HistoryEx> CreateHistory(HistoryDto historyDto)
+        public async Task<QuestionEx> CreateHistory(History h, QuestionService questionService)
         {
             var myContainer = await container();
             try
             {
-                History history = new(historyDto);
-                HistoryEx historyEx = await AddNewHistory(history);
-                return historyEx;
+                HistoryEx historyEx = await AddNewHistory(h);
+                var (history, msg) = historyEx;
+                if (history == null)
+                    return new QuestionEx(null, msg);
+
+                QuestionEx questionEx = await questionService.GetQuestion(history.QuestionKey);
+                var (question, message) = questionEx;
+                if (question != null)
+                {
+                    List<AssignedAnswer> assignedAnswers = question.AssignedAnswers;
+                    foreach (AssignedAnswer assignedAnswer in assignedAnswers)
+                    {
+                        if (assignedAnswer.AnswerKey.Equals(history.AnswerKey))
+                        {
+                            Console.WriteLine($"{assignedAnswer.AnswerKey}");
+                            switch ((USER_ANSWER_ACTION)history.UserAction)
+                            {
+                                case USER_ANSWER_ACTION.Fixed:
+                                    Console.WriteLine("11111111111111111111111");
+                                    assignedAnswer.Fixed++;
+                                    break;
+                                case USER_ANSWER_ACTION.NotFixed:
+                                    Console.WriteLine("000000000000000000000000000000");
+                                    assignedAnswer.NotFixed++;
+                                    break;
+                                case USER_ANSWER_ACTION.NotClicked:
+                                    Console.WriteLine("2222222222222222222222222222222222");
+                                    assignedAnswer.NotClicked++;
+                                    break;
+                            }
+                            break;
+                        }
+                    }
+                    question.Modified = history.Created;
+                    questionEx = await questionService.UpdateQuestion(question, assignedAnswers);
+                }
+                return questionEx;
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 Console.WriteLine(ex.Message);
-                return new HistoryEx(null, ex.Message);
+                return new QuestionEx(null, ex.Message);
             }
+        }
+
+        public class QAKey
+        {
+            public QAKey(AnswerRated answerRated) {
+                key = answerRated.QuestionKey.Id + "/" + answerRated.AnswerKey.Id;
+            }
+
+            public string key { get; set; }
+        }
+
+        public async Task<List<AnswerRatedDto>> GetAnswersRated(Question question)
+        {
+            var questionKey = new QuestionKey(question);
+            var myContainer = await container();
+
+            //var list = new List<AnswerRated>();
+            var dict = new Dictionary<QAKey, AnswerRatedDto>();
+            foreach (AssignedAnswer assignedAnswer in question.AssignedAnswers)
+            {
+                var answerRated = new AnswerRated(questionKey, assignedAnswer);
+                var key = new QAKey(answerRated);
+                if (!dict.ContainsKey(key))
+                {
+                    dict[key] = new AnswerRatedDto(questionKey, assignedAnswer);
+                }
+                dict[key].Incr(answerRated);
+                    //list.Add(new AnswerRated(questionKey, assignedAnswer));
+            }
+            return dict.Values.ToList();
+            //History? history = null;
+            //string msg = string.Empty;
+            //try
+            //{
+            //    Console.WriteLine($"*****************************  {PartitionKey}/{Id}");
+            //    // Read the item to see if it exists.  
+            //    history = await myContainer.ReadItemAsync<History>(
+            //        Id,
+            //        new PartitionKey(PartitionKey)
+            //    );
+            //    return new HistoryEx(history, msg);
+            //}
+            //catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            //{
+            //    msg = "NotFound";
+            //    Console.WriteLine(msg);
+            //}
+            //catch (Exception ex)
+            //{
+            //    // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+            //    msg = ex.Message;
+            //    Console.WriteLine(msg);
+            //}
+            //Console.WriteLine(JsonConvert.SerializeObject(history));
+            //Console.WriteLine("*****************************");
+            //return new HistoryEx(null, msg);
         }
 
         public async Task<HistoryEx> GetHistory(string PartitionKey, string Id)

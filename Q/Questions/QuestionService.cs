@@ -185,12 +185,12 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> UpdateQuestion(Question q, List<AssignedAnswer>? assignedAnswers = null)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers) = q;
-            //Console.WriteLine("========================UpdateQuestion-1");
-            //Console.WriteLine(JsonConvert.SerializeObject(q));
-            //Console.WriteLine("========================UpdateQuestion-2");
-            //Console.WriteLine(JsonConvert.SerializeObject(assignedAnswers));
-            //Console.WriteLine("========================UpdateQuestion-3");
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _) = q;
+            Console.WriteLine("========================UpdateQuestion-1");
+            Console.WriteLine(JsonConvert.SerializeObject(q));
+            Console.WriteLine("========================UpdateQuestion-2");
+            Console.WriteLine(JsonConvert.SerializeObject(assignedAnswers));
+            Console.WriteLine("========================UpdateQuestion-3");
             var myContainer = await container();
             try
             {
@@ -389,7 +389,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> AssignAnswer(AssignedAnswerDto assignedAnswerDto)
         {
-            var (questionKey, answerKey, created, answerTitle) = assignedAnswerDto;
+            var (questionKey, answerKey, answerTitle, created, modified) /*, Fixed, NotFixed, NotClicked)*/ = assignedAnswerDto;
             QuestionEx questionEx = await GetQuestion(questionKey!);
             var (question, msg) = questionEx;
             if (question != null)
@@ -404,7 +404,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> UnAssignAnswer(AssignedAnswerDto assignedAnswerDto)
         {
-            var (questionKey, answerKey, created, answerTitle) = assignedAnswerDto;
+            var (questionKey, answerKey, answerTitle, created, modified/*, Fixed, NotFixed, NotClicked*/) = assignedAnswerDto;
 
             QuestionEx questionEx = await GetQuestion(questionKey!);
             var (question, msg) = questionEx;
@@ -436,6 +436,21 @@ namespace NewKnowledgeAPI.Q.Questions
             }
             return question;
         }
+
+        public async Task<Question> SetAnswerTitles(Question question, AnswerService answerService)
+        {
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers) = question;
+            if (AssignedAnswers.Count > 0)
+            {
+                var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
+                Dictionary<string, string> answerTitles = await answerService.GetTitles(answerIds);
+                Console.WriteLine(JsonConvert.SerializeObject(answerTitles));
+                foreach (var assignedAnswer in AssignedAnswers)
+                    assignedAnswer.AnswerTitle = answerTitles[assignedAnswer.AnswerKey.Id];
+            }
+            return question;
+        }
+
 
         public void Dispose()
         {

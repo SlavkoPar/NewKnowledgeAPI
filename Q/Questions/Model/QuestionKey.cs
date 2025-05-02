@@ -6,11 +6,12 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 {
     public class QuestionKey
     {
+        [JsonProperty(PropertyName = "ParentCategory", NullValueHandling = NullValueHandling.Ignore)]
         public string? ParentCategory { get; set; }
         public string Id { get; set; }
         public string PartitionKey { get; set; }
 
-        public QuestionKey()
+        public  QuestionKey()
         {
         }
 
