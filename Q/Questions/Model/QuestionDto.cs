@@ -5,6 +5,7 @@ using NewKnowledgeAPI.A.Answers;
 using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 using System.Net;
+using NewKnowledgeAPI.Q.Questions.Model;
 
 namespace NewKnowledgeAPI.Q.Questions.Model
 {
@@ -29,8 +30,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             : base(question.Created, question.Modified, question.Archived)
         {
             //Console.WriteLine(JsonConvert.SerializeObject(question));
-            var assignedAnswers = question.AssignedAnswers ?? [];
             var questionKey = new QuestionKey(question);
+            var assignedAnswers = question.AssignedAnswers ?? [];
+            assignedAnswers.Sort(AssignedAnswer.Comparer); // put the most rated AssignedAnswers to the top
             PartitionKey = question.PartitionKey;
             Id = question.Id;
             Title = question.Title;

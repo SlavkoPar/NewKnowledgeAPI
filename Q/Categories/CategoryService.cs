@@ -237,7 +237,7 @@ namespace NewKnowledgeAPI.Q.Categories
         {
             var (Id, PartitionKey) = categoryDto;
             var myContainer = await container();
-            Category c = new(categoryDto);
+            var c = new Category(categoryDto);
             CategoryEx categoryEx = await AddNewCategory(c);
 
             // update parentCategory

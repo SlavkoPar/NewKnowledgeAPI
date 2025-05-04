@@ -362,7 +362,8 @@ namespace NewKnowledgeAPI.A.Answers
             var myContainer = await container();
             try
             {
-                var sqlQuery = $"SELECT c.partitionKey, c.ParentGroup, c.Title, c.id FROM c WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND ";
+                // order of fields matters
+                var sqlQuery = $"SELECT c.partitionKey, c.id, c.ParentGroup, c.Title  FROM c WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND ";
                 if (words.Count == 1)
                 {
                     sqlQuery += $" CONTAINS(c.Title, \"{words[0]}\", true) ";
@@ -382,21 +383,22 @@ namespace NewKnowledgeAPI.A.Answers
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
 
 
-                List<ShortAnswerDto> shortAnswers = [];
+                //List<ShortAnswerDto> shortAnswers = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                using (FeedIterator<ShortAnswer> queryResultSetIterator = 
-                    myContainer!.GetItemQueryIterator<ShortAnswer>(queryDefinition))
+                using (FeedIterator<ShortAnswerDto> queryResultSetIterator = 
+                    myContainer!.GetItemQueryIterator<ShortAnswerDto>(queryDefinition))
                 {
                     while (queryResultSetIterator.HasMoreResults)
                     {
-                        FeedResponse<ShortAnswer> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                        foreach (ShortAnswer shortAnswer in currentResultSet)
-                        {
-                            shortAnswers.Add(new ShortAnswerDto(shortAnswer));
-                        }
+                        FeedResponse<ShortAnswerDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                        return currentResultSet.ToList();
+                        //foreach (ShortAnswer shortAnswer in currentResultSet)
+                        //{
+                        //    shortAnswers.Add(new ShortAnswerDto(shortAnswer));
+                        //}
                     }
                 }
-                return shortAnswers;
+                return [];
             }
             catch (Exception ex)
             {

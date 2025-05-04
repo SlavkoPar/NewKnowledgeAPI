@@ -40,7 +40,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             QuestionKey = questionKey;
             var (answerKey, answerTitle, created, modified, Fixed, NotFixed, NotClicked) = assignedAnswer;
             AnswerKey = answerKey;
-            AnswerTitle = answerTitle;
+            AnswerTitle = answerTitle ?? string.Empty;
             Created = new WhoWhenDto(created);
             Modified = new WhoWhenDto(modified);
         }

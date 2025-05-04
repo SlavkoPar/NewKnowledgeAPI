@@ -342,7 +342,8 @@ namespace NewKnowledgeAPI.Q.Questions
             var myContainer = await container();
             try
             {
-                var sqlQuery = $"SELECT c.ParentCategory, c.Title, c.id FROM c WHERE c.Type = 'question' AND IS_NULL(c.Archived) AND ";
+                // order of fields matters
+                var sqlQuery = $"SELECT c.partitionKey, c.id, c.Title, c.ParentCategory  FROM c WHERE c.Type = 'question' AND IS_NULL(c.Archived) AND ";
                 if (words.Count == 1)
                 {
                     sqlQuery += $" CONTAINS(c.Title, \"{words[0]}\", true) ";
@@ -362,21 +363,22 @@ namespace NewKnowledgeAPI.Q.Questions
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
 
 
-                List<QuestDto> quests = [];
+                List<QuestDto> questDtos = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                using (FeedIterator<Question> queryResultSetIterator = 
-                    myContainer!.GetItemQueryIterator<Question>(queryDefinition))
+                using (FeedIterator<QuestDto> queryResultSetIterator = 
+                    myContainer!.GetItemQueryIterator<QuestDto>(queryDefinition))
                 {
                     while (queryResultSetIterator.HasMoreResults)
                     {
-                        FeedResponse<Question> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                        foreach (Question question in currentResultSet)
-                        {
-                            quests.Add(new QuestDto(question));
-                        }
+                        FeedResponse<QuestDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                        return currentResultSet.ToList();
+                        //foreach (Quest question in currentResultSet)
+                        //{
+                        //    quests.Add(new QuestDto(question));
+                        //}
                     }
                 }
-                return quests;
+                return [];
             }
             catch (Exception ex)
             {

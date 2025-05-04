@@ -9,11 +9,13 @@ namespace NewKnowledgeAPI.A.Groups.Model
     {
         [JsonProperty(PropertyName = "Id")]
         public string Id { get; set; }
+
         [JsonProperty(PropertyName = "PartitionKey")]
-        public string PartitionKey { get; set; }
+        public string? PartitionKey { get; set; }
+
         public string Title { get; set; }
         public int Kind { get; set; }
-        public string ParentGroup { get; set; }
+        public string? ParentGroup { get; set; }
         public int Level { get; set; }
         public List<string>? Variations { get; set; }
         public int? NumOfAnswers { get; set; }

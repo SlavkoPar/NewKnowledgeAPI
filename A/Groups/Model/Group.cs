@@ -2,6 +2,7 @@
 using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.Q.Categories.Model;
 
 namespace NewKnowledgeAPI.A.Groups.Model
 {
@@ -10,11 +11,13 @@ namespace NewKnowledgeAPI.A.Groups.Model
         public string Type { get; set; }
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
+
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
+
         public string Title { get; set; }
         public int Kind { get; set; }
-        public string ParentGroup { get; set; }
+        public string? ParentGroup { get; set; }
         public int Level { get; set; }
         public List<string>? Variations { get; set; }
         public int NumOfAnswers { get; set; }
@@ -44,7 +47,7 @@ namespace NewKnowledgeAPI.A.Groups.Model
             Title = groupData.Title;
             Kind = groupData.Kind;
             ParentGroup = groupData.ParentGroup;
-            Level = (int)groupData.Level;
+            Level = (int)groupData.Level!;
             Variations = groupData.Variations ?? null;
             NumOfAnswers = groupData.Answers == null ? 0 : groupData.Answers.Count;
             HasSubGroups = groupData.Groups != null && groupData.Groups.Count > 0;
@@ -56,7 +59,7 @@ namespace NewKnowledgeAPI.A.Groups.Model
         {
             Type = "group";
             Id = groupDto.Id;
-            PartitionKey = groupDto.PartitionKey!;
+            PartitionKey = groupDto.PartitionKey ?? groupDto.Id;
             Title = groupDto.Title;
             Kind = groupDto.Kind;
             ParentGroup = groupDto.ParentGroup;

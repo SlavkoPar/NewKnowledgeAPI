@@ -13,7 +13,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public string PartitionKey { get; set; }
         public string Title { get; set; }
         public int Kind { get; set; }
-        public string ParentCategory { get; set; }
+        public string? ParentCategory { get; set; }
         public int Level { get; set; }
         public List<string>? Variations { get; set; }
         public int NumOfQuestions { get; set; }
@@ -39,11 +39,11 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         {
             Type = "category";
             Id = categoryData.Id;
-            PartitionKey = categoryData.PartitionKey!;
+            PartitionKey = categoryData.PartitionKey ?? categoryData.Id;
             Title = categoryData.Title;
             Kind = categoryData.Kind;
             ParentCategory = categoryData.ParentCategory;
-            Level = (int)categoryData.Level;
+            Level = (int)categoryData.Level!;
             Variations = categoryData.Variations ?? null;
             NumOfQuestions = categoryData.Questions == null ? 0 : categoryData.Questions.Count;
             HasSubCategories = categoryData.Categories != null && categoryData.Categories.Count > 0;
@@ -55,7 +55,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         {
             Type = "category";
             Id = categoryDto.Id;
-            PartitionKey = categoryDto.PartitionKey!;
+            PartitionKey = categoryDto.PartitionKey ?? categoryDto.Id;
             Title = categoryDto.Title;
             Kind = categoryDto.Kind;
             ParentCategory = categoryDto.ParentCategory;
