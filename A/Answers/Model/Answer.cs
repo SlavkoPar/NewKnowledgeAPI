@@ -15,6 +15,8 @@ namespace NewKnowledgeAPI.A.Answers.Model
 
         public string? GroupTitle { get; set; }
         public string Title { get; set; }
+        public string? Link { get; set; }
+
         public string? ParentGroup { get; set; }
         public int Source { get; set; }
         public int Status { get; set; }
@@ -24,17 +26,17 @@ namespace NewKnowledgeAPI.A.Answers.Model
         {
         }
 
-  
-        public Answer(AnswerData answerData)
+    public Answer(AnswerData answerData)
             : base(new WhoWhen("Admin"), null, null)
         {
             string s = DateTime.Now.Ticks.ToString();
-            Id = s.Substring(s.Length-10);// Guid.NewGuid().ToString();
+            Id = answerData.Id ?? s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
             Type = "answer";
             PartitionKey = answerData.ParentGroup!;
             ParentGroup = answerData.ParentGroup;
             GroupTitle = null;
             Title = answerData.Title;
+            Link = answerData.Link;
             Source = 0;
             Status = 0;
         }
@@ -49,6 +51,7 @@ namespace NewKnowledgeAPI.A.Answers.Model
             ParentGroup = answerDto.ParentGroup;
             GroupTitle = null;
             Title = answerDto.Title;
+            Link = answerDto.Link;
             Source = answerDto.Source;
             Status = answerDto.Status;    
         }
@@ -56,12 +59,13 @@ namespace NewKnowledgeAPI.A.Answers.Model
         //public override string ToString() => 
         //    $"{PartitionKey}/{Id}, {Title} {ParentGroup} ";
 
-        public void Deconstruct(out string partitionKey, out string id, out string title, out string? parentGroup,
-                                out string type, out int source, out int status)
+        public void Deconstruct(out string partitionKey, out string id, out string title, out string? link,
+            out string? parentGroup, out string type, out int source, out int status)
         {
             partitionKey = PartitionKey;
             id = Id;
             title = Title;
+            link = Link;
             parentGroup = ParentGroup;
             type = Type;
             source = Source;

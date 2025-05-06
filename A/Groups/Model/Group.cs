@@ -23,6 +23,8 @@ namespace NewKnowledgeAPI.A.Groups.Model
         public int NumOfAnswers { get; set; }
         public bool HasSubGroups { get; set; }
         public List<Answer>? Answers { get; set; }
+
+        [JsonProperty(PropertyName = "HasMoreAnswers", NullValueHandling = NullValueHandling.Ignore)]
         public bool? HasMoreAnswers { get; set; }
 
         public Group()

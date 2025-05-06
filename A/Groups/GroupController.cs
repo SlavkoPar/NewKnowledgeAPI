@@ -10,7 +10,7 @@ namespace NewKnowledgeAPI.A.Groups
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     //[RequiredScope(RequiredScopesConfigurationKey = "AzureAd:Scopes")]
 
     public class GroupController : ControllerBase

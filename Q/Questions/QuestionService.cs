@@ -8,6 +8,7 @@ using NewKnowledgeAPI.Q.Categories;
 using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
+using NewKnowledgeAPI.A.Answers.Model;
 
 
 namespace NewKnowledgeAPI.Q.Questions
@@ -63,7 +64,7 @@ namespace NewKnowledgeAPI.Q.Questions
             string msg = string.Empty;
             try
             {
-                Question question = new(questionData);
+                var question = new Question(questionData);
                 Console.WriteLine("----->>>>> " + JsonConvert.SerializeObject(question));
                 // Read the item to see if it exists.  
                 await CheckDuplicate(questionData.Title);
@@ -72,7 +73,7 @@ namespace NewKnowledgeAPI.Q.Questions
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                Question q = new(questionData);
+                var q = new Question(questionData);
                 QuestionEx questionEx = await AddNewQuestion(q);
                 return questionEx;
             }
@@ -391,7 +392,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> AssignAnswer(AssignedAnswerDto assignedAnswerDto)
         {
-            var (questionKey, answerKey, answerTitle, created, modified) /*, Fixed, NotFixed, NotClicked)*/ = assignedAnswerDto;
+            var (questionKey, answerKey, answerTitle, answerLink, created, modified) = assignedAnswerDto;
             QuestionEx questionEx = await GetQuestion(questionKey!);
             var (question, msg) = questionEx;
             if (question != null)
@@ -406,7 +407,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> UnAssignAnswer(AssignedAnswerDto assignedAnswerDto)
         {
-            var (questionKey, answerKey, answerTitle, created, modified/*, Fixed, NotFixed, NotClicked*/) = assignedAnswerDto;
+            var (questionKey, answerKey, answerTitle, answerLink, created, modified) = assignedAnswerDto;
 
             QuestionEx questionEx = await GetQuestion(questionKey!);
             var (question, msg) = questionEx;
@@ -420,7 +421,8 @@ namespace NewKnowledgeAPI.Q.Questions
         }
 
 
-        public async Task<Question> SetAnswerTitles(Question question, CategoryService categoryService, AnswerService answerService)
+        public async Task<Question> SetAnswerTitles(Question question, 
+            CategoryService categoryService, AnswerService answerService)
         {
             var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers) = question;
             CategoryKey categoryKey = new(PartitionKey, question.ParentCategory!);
@@ -428,14 +430,19 @@ namespace NewKnowledgeAPI.Q.Questions
             CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
             var (category, message) = categoryEx;
             question.CategoryTitle = category != null ? category.Title : "NotFound Category";
-            if (AssignedAnswers.Count > 0)
-            {
-                var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
-                Dictionary<string, string> answerTitles = await answerService.GetTitles(answerIds);
-                Console.WriteLine(JsonConvert.SerializeObject(answerTitles));
-                foreach (var assignedAnswer in AssignedAnswers)
-                    assignedAnswer.AnswerTitle = answerTitles[assignedAnswer.AnswerKey.Id];
-            }
+            //if (AssignedAnswers.Count > 0)
+            //{
+            //    var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
+            //    Dictionary<string, AnswerTitleLink> dict = await answerService.GetTitlesAndLinks(answerIds);
+            //    Console.WriteLine(JsonConvert.SerializeObject(dict));
+            //    foreach (var assignedAnswer in AssignedAnswers)
+            //    {
+            //        AnswerTitleLink titleLink = dict[assignedAnswer.AnswerKey.Id];
+            //        assignedAnswer.AnswerTitle = titleLink.Title;
+            //        assignedAnswer.AnswerLink = titleLink.Link;
+            //    }
+            //}
+            await SetAnswerTitles(question, answerService);
             return question;
         }
 
@@ -444,12 +451,22 @@ namespace NewKnowledgeAPI.Q.Questions
             var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers) = question;
             if (AssignedAnswers.Count > 0)
             {
+                //var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
+                //Dictionary<string, string> answerTitles = await answerService.GetTitlesAndLinks(answerIds);
+                //Console.WriteLine(JsonConvert.SerializeObject(answerTitles));
+                //foreach (var assignedAnswer in AssignedAnswers)
+                //    assignedAnswer.AnswerTitle = answerTitles[assignedAnswer.AnswerKey.Id];
                 var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
-                Dictionary<string, string> answerTitles = await answerService.GetTitles(answerIds);
-                Console.WriteLine(JsonConvert.SerializeObject(answerTitles));
+                Dictionary<string, AnswerTitleLink> dict = await answerService.GetTitlesAndLinks(answerIds);
+                Console.WriteLine(JsonConvert.SerializeObject(dict));
                 foreach (var assignedAnswer in AssignedAnswers)
-                    assignedAnswer.AnswerTitle = answerTitles[assignedAnswer.AnswerKey.Id];
+                {
+                    AnswerTitleLink titleLink = dict[assignedAnswer.AnswerKey.Id];
+                    assignedAnswer.AnswerTitle = titleLink.Title;
+                    assignedAnswer.AnswerLink = titleLink.Link;
+                }
             }
+
             return question;
         }
 

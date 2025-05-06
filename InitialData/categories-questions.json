@@ -1,6 +1,63 @@
 {
   "Categories": [
     {
+      "Id": "DEMO",
+      "Title": "Demo",
+      "Kind": 2,
+      "Categories": [
+        {
+          "Id": "DALJINSKI",
+          "Title": "Daljinski",
+          "Kind": 2,
+          "Variations": [ "MTS", "SBB D3", "A1", "YETTEL" ],
+          "Questions": [
+            {
+              "Title": "Daljinski ne radi",
+              "Id": "4350111111",
+              "AssignedAnswers": [
+                {
+                  "AnswerKey": {
+                    "partitionKey": "DALJINSKI",
+                    "id": "4352294151"
+                  }
+                },
+                {
+                  "AnswerKey": {
+                    "partitionKey": "DALJINSKI",
+                    "id": "4352294152"
+                  }
+                },
+                {
+                  "AnswerKey": {
+                    "partitionKey": "DALJINSKI",
+                    "id": "4352294153"
+                  }
+                },
+                {
+                  "AnswerKey": {
+                    "partitionKey": "DALJINSKI",
+                    "id": "4352294154"
+                  }
+                }
+              ]
+            },
+            {
+              "Title": "Lista poslovnica",
+              "Id": "43502222222",
+              "AssignedAnswers": [
+                {
+                  "AnswerKey": {
+                    "partitionKey": "DALJINSKI",
+                    "id": "4352294154"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
       "Id": "PRODAJA",
       "Title": "Prodaja",
       "Kind": 2,
@@ -58,7 +115,6 @@
               "Questions": [
                 {
                   "Title": "Remote controller of EON smart box-a, doesn't work",
-                  "assignedAnswers": [ 16, 20, 17, 28 ]
                 },
                 { "Title": "Podešavanje pozicije ekrana na EON smart box-ukomande" },
                 { "Title": "Podešavanje i promena jezika titla na EON smart box-u" },
@@ -68,7 +124,6 @@
                 { "Title": "Dajte mi listu poslovnica (ne standova)" },
                 {
                   "Title": "Nothing works and no one knows why",
-                  "assignedAnswers": [ 20, 28 ]
                 }
               ]
             },
@@ -121,7 +176,7 @@
             { "Title": "xxxxx" }
           ]
         }
-      ] 
+      ]
     },
     {
       "Id": "RACUNI",

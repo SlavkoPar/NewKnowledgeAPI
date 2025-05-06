@@ -10,7 +10,8 @@ namespace NewKnowledgeAPI.A.Answers.Model
         //public string? PartitionKey { get; set; }
 
         public string Title { get; set; }
-        public IList<int>? AssignedAnswers { get; set; }
+        public string? Link { get; set; }
+        public IList<string>? AssignedAnswers { get; set; }
         public int? Source { get; set; }
         public int? Status { get; set; }
 

@@ -146,7 +146,7 @@ namespace NewKnowledgeAPI.Q.Categories
             if (Questions != null && Id == "DOMAIN")
             {
                 for (var i = 1; i <= 500; i++)
-                    Questions!.Add(new QuestionData(Id, $"Demo data for DOMAIN " + i.ToString("D3")));
+                    Questions!.Add(new QuestionData(Id, $"Test row for DOMAIN " + i.ToString("D3")));
             }
 
             try

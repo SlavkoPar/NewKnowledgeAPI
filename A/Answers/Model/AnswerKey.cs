@@ -13,6 +13,12 @@ namespace NewKnowledgeAPI.A.Answers.Model
         {
         }
 
+        public AnswerKey(string partitionKey, string id)
+        {
+            PartitionKey = partitionKey;
+            Id = id; 
+        }
+
         public override bool Equals(object obj) => this.Equals(obj as AnswerKey);
 
         public bool Equals(AnswerKey key)

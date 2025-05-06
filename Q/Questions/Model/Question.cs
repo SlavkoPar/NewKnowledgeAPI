@@ -1,4 +1,6 @@
-﻿using NewKnowledgeAPI.Common;
+﻿using Microsoft.Azure.Cosmos.Linq;
+using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.Common;
 using Newtonsoft.Json;
 
 namespace NewKnowledgeAPI.Q.Questions.Model
@@ -19,7 +21,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public string Title { get; set; }
         public string? ParentCategory { get; set; }
         public List<AssignedAnswer> AssignedAnswers { get; set; }
+
         public int NumOfAssignedAnswers  {get; set;}
+
         public int Source { get; set; }
         public int Status { get; set; }
 
@@ -33,13 +37,22 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             : base(new WhoWhen("Admin"), null, null)
         {
             string s = DateTime.Now.Ticks.ToString();
-            Id = s.Substring(s.Length-10);// Guid.NewGuid().ToString();
+            Id = questionData.Id ?? s.Substring(s.Length-10);// Guid.NewGuid().ToString();
             Type = "question";
             PartitionKey = questionData.ParentCategory!;
             ParentCategory = questionData.ParentCategory;
             CategoryTitle = null;
             Title = questionData.Title;
+
             AssignedAnswers = [];
+            if (questionData.AssignedAnswers != null)
+            {
+                foreach (var ans in questionData.AssignedAnswers)
+                {
+                    AssignedAnswers.Add(new AssignedAnswer(ans.AnswerKey));
+                }
+            }
+
             NumOfAssignedAnswers = 0;
             Source = 0;
             Status = 0;

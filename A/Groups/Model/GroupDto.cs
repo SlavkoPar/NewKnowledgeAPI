@@ -50,6 +50,7 @@ namespace NewKnowledgeAPI.A.Groups.Model
             HasMoreAnswers = answersMore.hasMoreAnswers;
         }
 
+
         public GroupDto(Group group)
             : base(group.Created, group.Modified, group.Archived)
         {

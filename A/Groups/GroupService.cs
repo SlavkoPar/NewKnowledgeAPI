@@ -147,7 +147,7 @@ namespace NewKnowledgeAPI.A.Groups
             if (Answers != null && Id == "DOMAIN")
             {
                 for (var i = 1; i <= 500; i++)
-                    Answers!.Add(new AnswerData(Id, $"Demo data for DOMAIN " + i.ToString("D3")));
+                    Answers!.Add(new AnswerData(Id, $"Test row for DOMAIN " + i.ToString("D3")));
             }
 
             try

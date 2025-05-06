@@ -91,12 +91,12 @@ namespace NewKnowledgeAPI.Q.Questions
             Console.WriteLine("GetQuests", filter, count, nesto);
             try
             {
-                var words = filter //.ToLower()
-                                .Replace("?", "")
-                                .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
-                                .Where(w => w.Length > 2)
-                                .ToList();
                 var questionService = new QuestionService(dbService);
+                var words = filter //.ToLower()
+                            .Replace("?", "")
+                            .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                            .Where(w => w.Length > 2)
+                            .ToList();
                 List<QuestDto> quests = await questionService.GetQuests(words, count);
                 return Ok(quests);
             }

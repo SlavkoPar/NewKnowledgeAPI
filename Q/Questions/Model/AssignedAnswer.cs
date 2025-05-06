@@ -14,6 +14,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         [JsonProperty(PropertyName = "AnswerTitle", NullValueHandling = NullValueHandling.Ignore)]
         public string? AnswerTitle;
 
+        [JsonProperty(PropertyName = "AnswerLink", NullValueHandling = NullValueHandling.Ignore)]
+        public string? AnswerLink;
+
         public uint Fixed { get; set; } // num of clicks to Fixed
         public uint NotFixed { get; set; } // num of clicks to NotFixed
         public uint NotClicked { get; set; } // num of not clicked
@@ -22,12 +25,23 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         {
         }
 
-  
-        public AssignedAnswer(AssignedAnswerDto dto)
+        public AssignedAnswer(AnswerKey answerKey)
         {
-            var (_, answerKey, _, created, modified) = dto; //, Fixed, NotFixed, NotClicked) = dto; 
             AnswerKey = answerKey;
             AnswerTitle = null;
+            AnswerLink = null;
+            Created = new WhoWhen("Admin");
+            Fixed = 0;
+            NotFixed = 0;
+            NotClicked = 0;
+        }
+
+        public AssignedAnswer(AssignedAnswerDto dto)
+        {
+            var (_, answerKey, _, _, created, modified) = dto; //, Fixed, NotFixed, NotClicked) = dto; 
+            AnswerKey = answerKey;
+            AnswerTitle = null;
+            AnswerLink = null;
             Created = new WhoWhen(created);
             Modified = modified != null ? new WhoWhen(modified) : null;
             Fixed = 0;
@@ -39,12 +53,13 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         //    $"{PartitionKey}/{Id}, {Title} {ParentGroup} ";
 
 
-        internal void Deconstruct(out AnswerKey answerKey,  out string? answerTitle, 
+        internal void Deconstruct(out AnswerKey answerKey, out string? answerTitle, out string? answerLink,
             out WhoWhen created, out WhoWhen? modified,
             out uint Fixed, out uint NotFixed, out uint NotClicked)
         {
             answerKey = AnswerKey;
             answerTitle = AnswerTitle;
+            answerLink = AnswerLink;
             created = Created;
             modified = Modified ?? null;
             Fixed = this.Fixed;

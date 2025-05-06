@@ -16,9 +16,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public WhoWhenDto? Modified { get; set; }
 
         public string? AnswerTitle { get; set; }
-        //public uint Fixed { get; set; } // num of clicks to Fixed
-        //public uint NotFixed { get; set; } // num of clicks to NotFixed
-        //public uint NotClicked { get; set; } // num of not clicked
+        public string? AnswerLink { get; set; }
 
         public AssignedAnswerDto()
         {
@@ -38,25 +36,25 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public AssignedAnswerDto(QuestionKey questionKey, AssignedAnswer assignedAnswer)
         {
             QuestionKey = questionKey;
-            var (answerKey, answerTitle, created, modified, Fixed, NotFixed, NotClicked) = assignedAnswer;
+            var (answerKey, answerTitle, answerLink, created, modified, Fixed, NotFixed, NotClicked) = assignedAnswer;
             AnswerKey = answerKey;
             AnswerTitle = answerTitle ?? string.Empty;
+            AnswerLink = answerLink ?? string.Empty;
             Created = new WhoWhenDto(created);
             Modified = new WhoWhenDto(modified);
         }
 
         internal void Deconstruct(out QuestionKey? questionKey, 
-            out AnswerKey answerKey, out string? answerTitle, out WhoWhenDto created, out WhoWhenDto? modified)
+            out AnswerKey answerKey, out string? answerTitle, out string? answerLink,
+            out WhoWhenDto created, out WhoWhenDto? modified)
             //out uint Fixed, out uint NotFixed, out uint NotClicked)
         {
             questionKey = QuestionKey;
             answerKey = AnswerKey;
             answerTitle = AnswerTitle;
+            answerLink = AnswerLink;
             created = Created;
             modified = Modified;
-            //Fixed = this.Fixed;
-            //NotFixed= this.NotFixed;
-            //NotClicked = this.NotClicked;
         }
     }
 
