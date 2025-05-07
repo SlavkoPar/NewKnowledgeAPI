@@ -20,9 +20,12 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 
         public string Title { get; set; }
         public string? ParentCategory { get; set; }
-        public List<AssignedAnswer> AssignedAnswers { get; set; }
 
+        public List<AssignedAnswer> AssignedAnswers { get; set; }
         public int NumOfAssignedAnswers  {get; set;}
+
+        public List<RelatedFilter> RelatedFilters { get; set; }
+        public int NumOfRelatedFilters { get; set; }
 
         public int Source { get; set; }
         public int Status { get; set; }
@@ -44,6 +47,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             CategoryTitle = null;
             Title = questionData.Title;
 
+            // Assigned Answers
             AssignedAnswers = [];
             if (questionData.AssignedAnswers != null)
             {
@@ -52,8 +56,20 @@ namespace NewKnowledgeAPI.Q.Questions.Model
                     AssignedAnswers.Add(new AssignedAnswer(ans.AnswerKey));
                 }
             }
+            NumOfAssignedAnswers = AssignedAnswers.Count;
 
-            NumOfAssignedAnswers = 0;
+            // Related Filters
+            RelatedFilters = [];
+            if (questionData.RelatedFilters != null)
+            {
+                foreach (var relatedFilterData in questionData.RelatedFilters)
+                {
+                    var relatedFilter = new RelatedFilter(relatedFilterData.Filter, new WhoWhen("Admin"));
+                    RelatedFilters.Add(relatedFilter);
+                }
+            }
+            NumOfRelatedFilters = RelatedFilters.Count;
+
             Source = 0;
             Status = 0;
         }

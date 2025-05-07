@@ -8,10 +8,11 @@ using NewKnowledgeAPI.Q.Questions.Model;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using NewKnowledgeAPI.Q.Questions;
 using Microsoft.AspNetCore.Http.HttpResults;
+using NewKnowledgeAPI.HistFilter.Model;
 
-namespace NewKnowledgeAPI.Hist
+namespace NewKnowledgeAPI.HistFilter
 {
-    public class HistoryService : IDisposable
+    public class HistoryFilterService : IDisposable
     {
         public DbService? Db { get; set; } = null;
 
@@ -26,11 +27,11 @@ namespace NewKnowledgeAPI.Hist
 
 
         public string? PartitionKey { get; set; } = null;
-        public HistoryService()
+        public HistoryFilterService()
         {
         }
 
-        public HistoryService(DbService Db)
+        public HistoryFilterService(DbService Db)
         {
             this.Db = Db;
         }
@@ -54,63 +55,33 @@ namespace NewKnowledgeAPI.Hist
             }
             return HttpStatusCode.Found;
         }
-
-        public async Task<HistoryEx?> AddHistory(HistoryData historyData)
+          
+        public async Task<HistoryFilterEx> AddNewHistory(HistoryFilter history)
         {
-            var myContainer = await container();
-            //Console.WriteLine(JsonConvert.SerializeObject(historyData));
-            string msg = string.Empty;
-            try
-            {
-                var history = new History(historyData);
-                Console.WriteLine("----->>>>> " + JsonConvert.SerializeObject(history));
-                // Read the item to see if it exists.  
-                //await CheckDuplicate(historyData.Title);
-                //msg = $":::::: Item in database with Title: {historyData.Title} already exists";
-                //Console.WriteLine(msg);
-            }
-            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-            {
-                History q = new(historyData);
-                HistoryEx historyEx = await AddNewHistory(q);
-                return historyEx;
-            }
-            catch (Exception ex)
-            {
-                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                msg = ex.Message;
-                Console.WriteLine(msg);
-            }
-            return new HistoryEx(null, msg);
-        }
-
-
-        public async Task<HistoryEx> AddNewHistory(History history)
-        {
-            var (PartitionKey, Id, QuestionId, AnswerId, Fixed, NickName ) = history;
+            var (partitionKey, id, questionKey, filter, created) = history;
             var myContainer = await container();
             string msg = string.Empty;
             try
             {
                 // Check if the id already exists
-                ItemResponse<History> aResponse =
-                    await myContainer!.ReadItemAsync<History>(
-                        Id,
-                        new PartitionKey(PartitionKey)
+                ItemResponse<HistoryFilter> aResponse =
+                    await myContainer!.ReadItemAsync<HistoryFilter>(
+                        id,
+                        new PartitionKey(partitionKey)
                     );
-                msg = $"History in database with id: {Id} already exists\n";
+                msg = $"History in database with id: {id} already exists\n";
                 Console.WriteLine(msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                    ItemResponse<History> aResponse =
+                    ItemResponse<HistoryFilter> aResponse =
                     await myContainer!.CreateItemAsync(
                             history,
-                            new PartitionKey(PartitionKey)
+                            new PartitionKey(partitionKey)
                         );
                     // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                     Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
-                    return new HistoryEx(aResponse.Resource, "");
+                    return new HistoryFilterEx(aResponse.Resource, "");
             }
             catch (Exception ex)
             {
@@ -118,17 +89,17 @@ namespace NewKnowledgeAPI.Hist
                 Console.WriteLine(ex.Message);
                 msg = ex.Message;
             }
-            return new HistoryEx(null, msg);
+            return new HistoryFilterEx(null, msg);
         }
 
 
-        public async Task<QuestionEx> CreateHistory(History h, QuestionService questionService)
+        public async Task<QuestionEx> CreateHistory(HistoryFilter historyFilter, QuestionService questionService)
         {
             var myContainer = await container();
             try
             {
-                HistoryEx historyEx = await AddNewHistory(h);
-                var (history, msg) = historyEx;
+                HistoryFilterEx historyFilterEx = await AddNewHistory(historyFilter);
+                var (history, msg) = historyFilterEx;
                 if (history == null)
                     return new QuestionEx(null, msg);
 
@@ -136,32 +107,24 @@ namespace NewKnowledgeAPI.Hist
                 var (question, message) = questionEx;
                 if (question != null)
                 {
-                    List<AssignedAnswer> assignedAnswers = question.AssignedAnswers;
-                    foreach (AssignedAnswer assignedAnswer in assignedAnswers)
+                    List<RelatedFilter> relatedFilters = question.RelatedFilters;
+                    var bFound = false;
+                    foreach (RelatedFilter relatedFilter in relatedFilters)
                     {
-                        if (assignedAnswer.AnswerKey.Equals(history.AnswerKey))
+                        if (relatedFilter.Equals(historyFilter.Filter))
                         {
-                            Console.WriteLine($"{assignedAnswer.AnswerKey}");
-                            switch ((USER_ANSWER_ACTION)history.UserAction)
-                            {
-                                case USER_ANSWER_ACTION.Fixed:
-                                    Console.WriteLine("11111111111111111111111");
-                                    assignedAnswer.Fixed++;
-                                    break;
-                                case USER_ANSWER_ACTION.NotFixed:
-                                    Console.WriteLine("000000000000000000000000000000");
-                                    assignedAnswer.NotFixed++;
-                                    break;
-                                case USER_ANSWER_ACTION.NotClicked:
-                                    Console.WriteLine("2222222222222222222222222222222222");
-                                    assignedAnswer.NotClicked++;
-                                    break;
-                            }
+                            relatedFilter.NumOfUsages++;
+                            relatedFilter.LastUsed = historyFilter.Created;
+                            bFound = true;
                             break;
                         }
                     }
+                    if (!bFound)
+                    {
+                        relatedFilters.Add(new RelatedFilter(historyFilter.Filter, historyFilter.Created));
+                    }
                     question.Modified = history.Created;
-                    questionEx = await questionService.UpdateQuestion(question, assignedAnswers);
+                    questionEx = await questionService.UpdateQuestionFilters(question, relatedFilters);
                 }
                 return questionEx;
             }

@@ -39,6 +39,11 @@
                     "id": "4352294154"
                   }
                 }
+              ],
+              "RelatedFilters": [
+                {
+                  "Filter": "Lista poslovnica"
+                }
               ]
             },
             {

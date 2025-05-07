@@ -11,6 +11,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 
         public string Title { get; set; }
         public List<AssignedAnswerData>? AssignedAnswers { get; set; }
+        public List<RelatedFilterData>? RelatedFilters { get; set; }
         public int? Source { get; set; }
         public int? Status { get; set; }
 

@@ -225,8 +225,6 @@ namespace NewKnowledgeAPI.Q.Questions
                         question.AssignedAnswers = assignedAnswers;
                         question.NumOfAssignedAnswers = assignedAnswers.Count;
                     }
-                    question.Source = Source;
-                    question.Status = Status;
                     question.Modified = q.Modified!;
                     aResponse = await myContainer.ReplaceItemAsync(question, Id, new PartitionKey(PartitionKey));
                     return new QuestionEx(aResponse.Resource, "");
@@ -245,6 +243,68 @@ namespace NewKnowledgeAPI.Q.Questions
             }
             return new QuestionEx(null, "Server Problem Update");
         }
+
+
+        public async Task<QuestionEx> UpdateQuestionFilters(Question q, List<RelatedFilter>? relatedFilters = null)
+        {
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _) = q;
+            Console.WriteLine("========================UpdateQuestion-1");
+            Console.WriteLine(JsonConvert.SerializeObject(q));
+            Console.WriteLine("========================UpdateQuestion-2");
+            Console.WriteLine(JsonConvert.SerializeObject(relatedFilters));
+            Console.WriteLine("========================UpdateQuestion-3");
+            var myContainer = await container();
+            try
+            {
+                // Read the item to see if it exists.  
+                ItemResponse<Question> aResponse =
+                    await myContainer!.ReadItemAsync<Question>(
+                        Id,
+                        new PartitionKey(PartitionKey)
+                    );
+                Question question = aResponse.Resource;
+                var doUpdate = true;
+                if (!Title.Equals(question.Title, StringComparison.OrdinalIgnoreCase))
+                {
+                    try
+                    {
+                        HttpStatusCode statusCode = await CheckDuplicate(Title);
+                        doUpdate = false;
+                        var msg = $"Question with Title: \"{Title}\" already exists in database.";
+                        Console.WriteLine(msg);
+                        return new QuestionEx(null, msg);
+                    }
+                    catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        question.Title = question.Title;
+                    }
+                }
+                if (doUpdate)
+                {
+                    if (relatedFilters != null)
+                    {
+                        question.RelatedFilters = relatedFilters;
+                        question.NumOfRelatedFilters = relatedFilters.Count;
+                    }
+                    question.Modified = q.Modified!;
+                    aResponse = await myContainer.ReplaceItemAsync(question, Id, new PartitionKey(PartitionKey));
+                    return new QuestionEx(aResponse.Resource, "");
+                }
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                var msg = $"Question Id: \"{Id}\" Not Found in database.";
+                Console.WriteLine(msg);
+                return new QuestionEx(null, msg);
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Console.WriteLine(ex.Message);
+            }
+            return new QuestionEx(null, "Server Problem Update");
+        }
+
 
         public async Task<QuestionEx> DeleteQuestion(QuestionDto questionDto)
         {
@@ -388,7 +448,11 @@ namespace NewKnowledgeAPI.Q.Questions
             }
             return [];
         }
-           
+
+
+        // --------------------------------------------------------
+        //                  Assigned Answers
+        // --------------------------------------------------------
 
         public async Task<QuestionEx> AssignAnswer(AssignedAnswerDto assignedAnswerDto)
         {
@@ -470,6 +534,89 @@ namespace NewKnowledgeAPI.Q.Questions
             return question;
         }
 
+        // --------------------------------------------------------
+        //                  Filters
+        // --------------------------------------------------------
+
+        public async Task<QuestionEx> AssignFilter(RelatedFilterDto dto)
+        {
+            var (questionKey, filter, created, modified) = dto;
+            QuestionEx questionEx = await GetQuestion(questionKey!);
+            var (question, msg) = questionEx;
+            if (question != null)
+            {
+                var relatedFilters = question.RelatedFilters ?? new List<RelatedFilter>();
+                relatedFilters.Add(new RelatedFilter(dto));
+                question.Modified = new WhoWhen(created);
+                questionEx = await UpdateQuestionFilters(question, relatedFilters);
+            }
+            return questionEx;
+        }
+
+        //public async Task<QuestionEx> UnAssignFilter(RelatedFilterDto dto)
+        //{
+        //    var (questionKey, filter, created, modified) = dto;
+
+        //    QuestionEx questionEx = await GetQuestion(questionKey!);
+        //    var (question, msg) = questionEx;
+        //    if (question != null)
+        //    {
+        //        var relatedFilters = question.RelatedFilters.FindAll(a => a.FilterKey.Id != filterKey.Id);
+        //        question.Modified = new WhoWhen(created);
+        //        questionEx = await UpdateQuestionFilters(question, relatedFilters);
+        //    }
+        //    return questionEx;
+        //}
+
+
+        //public async Task<Question> SetFilterTitles(Question question,
+        //    CategoryService categoryService, FilterService filterService)
+        //{
+        //    var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, RelatedFilters) = question;
+        //    CategoryKey categoryKey = new(PartitionKey, question.ParentCategory!);
+        //    // get category Title
+        //    CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
+        //    var (category, message) = categoryEx;
+        //    question.CategoryTitle = category != null ? category.Title : "NotFound Category";
+        //    //if (RelatedFilters.Count > 0)
+        //    //{
+        //    //    var filterIds = RelatedFilters.Select(a => a.FilterKey.Id).Distinct().ToList();
+        //    //    Dictionary<string, FilterTitleLink> dict = await filterService.GetTitlesAndLinks(filterIds);
+        //    //    Console.WriteLine(JsonConvert.SerializeObject(dict));
+        //    //    foreach (var relatedFilters in RelatedFilters)
+        //    //    {
+        //    //        FilterTitleLink titleLink = dict[relatedFilters.FilterKey.Id];
+        //    //        relatedFilters.FilterTitle = titleLink.Title;
+        //    //        relatedFilters.FilterLink = titleLink.Link;
+        //    //    }
+        //    //}
+        //    await SetFilterTitles(question, filterService);
+        //    return question;
+        //}
+
+        //public async Task<Question> SetFilterTitles(Question question, FilterService filterService)
+        //{
+        //    var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, RelatedFilters) = question;
+        //    if (RelatedFilters.Count > 0)
+        //    {
+        //        //var filterIds = RelatedFilters.Select(a => a.FilterKey.Id).Distinct().ToList();
+        //        //Dictionary<string, string> filterTitles = await filterService.GetTitlesAndLinks(filterIds);
+        //        //Console.WriteLine(JsonConvert.SerializeObject(filterTitles));
+        //        //foreach (var relatedFilters in RelatedFilters)
+        //        //    relatedFilters.FilterTitle = filterTitles[relatedFilters.FilterKey.Id];
+        //        var filterIds = RelatedFilters.Select(a => a.FilterKey.Id).Distinct().ToList();
+        //        Dictionary<string, FilterTitleLink> dict = await filterService.GetTitlesAndLinks(filterIds);
+        //        Console.WriteLine(JsonConvert.SerializeObject(dict));
+        //        foreach (var relatedFilters in RelatedFilters)
+        //        {
+        //            FilterTitleLink titleLink = dict[relatedFilters.FilterKey.Id];
+        //            relatedFilters.FilterTitle = titleLink.Title;
+        //            relatedFilters.FilterLink = titleLink.Link;
+        //        }
+        //    }
+
+        //    return question;
+        //}
 
         public void Dispose()
         {
