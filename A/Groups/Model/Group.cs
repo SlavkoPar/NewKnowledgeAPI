@@ -57,7 +57,7 @@ namespace NewKnowledgeAPI.A.Groups.Model
         }
 
         public Group(GroupDto groupDto)
-            :base(groupDto.Created, groupDto.Modified, groupDto.Archived)
+            :base(groupDto.Created, groupDto.Modified, null)
         {
             Type = "group";
             Id = groupDto.Id;

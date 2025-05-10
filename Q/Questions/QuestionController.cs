@@ -11,7 +11,7 @@ using NewKnowledgeAPI.Q.Questions.Model;
 using NewKnowledgeAPI.A.Answers.Model;
 using NewKnowledgeAPI.Q.Categories;
 using NewKnowledgeAPI.A.Answers;
-
+using NewKnowledgeAPI.Common;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -49,7 +49,7 @@ namespace NewKnowledgeAPI.Q.Questions
                     var questionService = new QuestionService(dbService);
                     QuestionsMore questionsMore = await questionService.GetQuestions(parentCategory, startCursor, pageSize, includeQuestionId);
                     //Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", questionsMore.questions.Count);
-                    CategoryDto categoryDto = new(categoryKey, questionsMore);
+                    var categoryDto = new CategoryDto(categoryKey, questionsMore);
                     categoryDto.Title = category.Title;
                     return Ok(new CategoryDtoEx(categoryDto, msg));
                 }
@@ -97,7 +97,7 @@ namespace NewKnowledgeAPI.Q.Questions
                             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                             .Where(w => w.Length > 2)
                             .ToList();
-                List<QuestDto> quests = await questionService.GetQuests(words, count);
+                List<QuestionRowDto> quests = await questionService.GetQuests(words, count);
                 return Ok(quests);
             }
             catch (Exception ex)
@@ -170,7 +170,7 @@ namespace NewKnowledgeAPI.Q.Questions
                 QuestionEx questionEx = await questionService.DeleteQuestion(questionDto);
                 if (questionEx!.question != null)
                 {
-                    questionDto.Modified = questionDto.Archived;
+                    questionDto.Modified = questionDto.Modified; //.Archived;
                     await categoryService.UpdateNumOfQuestions(questionDto, -1);
                     return Ok(new QuestionDtoEx(questionEx));
                 }

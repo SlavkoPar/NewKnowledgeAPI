@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using NewKnowledgeAPI.Q.Questions.Model;
+using Newtonsoft.Json;
 using System.Diagnostics.Metrics;
 
 
@@ -18,6 +19,13 @@ namespace NewKnowledgeAPI.A.Answers.Model
             PartitionKey = partitionKey;
             Id = id; 
         }
+
+        public AnswerKey(Answer answer)
+        {
+            PartitionKey = answer.PartitionKey;
+            Id = answer.Id;
+        }
+
 
         public override bool Equals(object obj) => this.Equals(obj as AnswerKey);
 

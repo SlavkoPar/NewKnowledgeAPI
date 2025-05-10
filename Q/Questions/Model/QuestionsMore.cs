@@ -6,12 +6,12 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 {
     public class QuestionsMore
     {
-        public List<Question> questions { get; set; }
-        public bool hasMoreQuestions { get; set; }
-        public QuestionsMore(List<Question> questions, bool hasMore)
+        public List<QuestionRow> QuestionRows { get; set; }
+        public bool HasMoreQuestions { get; set; }
+        public QuestionsMore(List<QuestionRow> questions, bool hasMore)
         {
-            this.questions = questions;
-            hasMoreQuestions = hasMore;
+            QuestionRows = questions;
+            HasMoreQuestions = hasMore;
         }
     }
 }

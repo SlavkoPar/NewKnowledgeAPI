@@ -27,7 +27,7 @@ namespace NewKnowledgeAPI.Q.Questions
         }
 
 
-        public string? PartitionKey { get; set; } = null;
+        //public string? PartitionKey { get; set; } = null;
         public QuestionService()
         {
         }
@@ -89,7 +89,8 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> AddNewQuestion(Question question)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Questions) = question;
+            var (partitionKey, id, title, parentCategory, type, source, status, assignedAnswers, relatedFilters) = question;
+
             var myContainer = await container();
             string msg = string.Empty;
             try
@@ -97,10 +98,10 @@ namespace NewKnowledgeAPI.Q.Questions
                 // Check if the id already exists
                 ItemResponse<Question> aResponse =
                     await myContainer!.ReadItemAsync<Question>(
-                        Id,
-                        new PartitionKey(PartitionKey)
+                        id,
+                        new PartitionKey(partitionKey)
                     );
-                msg = $"Question in database with id: {Id} already exists\n";
+                msg = $"Question in database with id: {id} already exists\n";
                 Console.WriteLine(msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
@@ -108,8 +109,8 @@ namespace NewKnowledgeAPI.Q.Questions
                 try
                 {
                     // Check if the title already exists
-                    HttpStatusCode statusCode = await CheckDuplicate(Title);
-                    msg = $"Question in database with Title: {Title} already exists";
+                    HttpStatusCode statusCode = await CheckDuplicate(title);
+                    msg = $"Question in database with Title: {title} already exists";
                     Console.WriteLine(msg);
                 }
                 catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
@@ -117,7 +118,7 @@ namespace NewKnowledgeAPI.Q.Questions
                     ItemResponse<Question> aResponse =
                     await myContainer!.CreateItemAsync(
                             question,
-                            new PartitionKey(PartitionKey)
+                            new PartitionKey(partitionKey)
                         );
                     // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                     Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
@@ -186,7 +187,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> UpdateQuestion(Question q, List<AssignedAnswer>? assignedAnswers = null)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _) = q;
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _, relatedFilters) = q;
             Console.WriteLine("========================UpdateQuestion-1");
             Console.WriteLine(JsonConvert.SerializeObject(q));
             Console.WriteLine("========================UpdateQuestion-2");
@@ -247,7 +248,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> UpdateQuestionFilters(Question q, List<RelatedFilter>? relatedFilters = null)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _) = q;
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _, _ /*relatedFilters*/) = q;
             Console.WriteLine("========================UpdateQuestion-1");
             Console.WriteLine(JsonConvert.SerializeObject(q));
             Console.WriteLine("========================UpdateQuestion-2");
@@ -326,7 +327,7 @@ namespace NewKnowledgeAPI.Q.Questions
                 //    HttpStatusCode statusCode = await CheckDuplicate(questionDto.Title);
                 //}
                 // TODO check if is it already Archived
-                question.Archived = new WhoWhen(questionDto.Archived!.NickName);
+                question.Archived = new WhoWhen(questionDto.Modified!.NickName);
 
                 aResponse = await myContainer.ReplaceItemAsync(question, question.Id, new PartitionKey(question.PartitionKey));
                 Console.WriteLine("Updated Question [{0},{1}].\n \tBody is now: {2}\n", question.Title, question.Id, question);
@@ -355,8 +356,9 @@ namespace NewKnowledgeAPI.Q.Questions
             var myContainer = await container();
             try
             {
-                // OR c.ParentCategory = ''
-                string sqlQuery = $"SELECT * FROM c WHERE c.Type = 'question' AND IS_NULL(c.Archived) AND " +
+
+                string sqlQuery = $"SELECT c.id, c.partitionKey, c.ParentCategory, c.Title FROM c " +
+                    $" WHERE c.Type = 'question' AND IS_NULL(c.Archived) AND " +
                     $" c.ParentCategory = '{parentCategory}' ORDER BY c.Title OFFSET {startCursor} ";
                 sqlQuery += includeQuestionId == "null"
                     ? $"LIMIT {pageSize}"
@@ -367,27 +369,27 @@ namespace NewKnowledgeAPI.Q.Questions
                 int n = 0;
                 bool included = false;
 
-                List<Question> questions = [];
+                List<QuestionRow> list = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                FeedIterator<Question> queryResultSetIterator = myContainer!.GetItemQueryIterator<Question>(queryDefinition);
+                FeedIterator<QuestionRow> queryResultSetIterator = myContainer!.GetItemQueryIterator<QuestionRow>(queryDefinition);
                 while (queryResultSetIterator.HasMoreResults)
                 {
-                    FeedResponse<Question> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                    foreach (Question question in currentResultSet)
+                    FeedResponse<QuestionRow> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                    foreach (QuestionRow questionRow in currentResultSet)
                     {
-                        if (includeQuestionId != null && question.Id == includeQuestionId)
+                        if (includeQuestionId != null && questionRow.Id == includeQuestionId)
                         {
                             included = true;
                         }
                         //Console.WriteLine(">>>>>>>> question is: {0}", JsonConvert.SerializeObject(question));
-                        questions.Add(question);
+                        list.Add(questionRow);
                         n++;
                         if (n >= pageSize && (includeQuestionId == null || included))
                         {
-                            return new QuestionsMore(questions, true);
+                            return new QuestionsMore(list, true);
                         }
                     }
-                    return new QuestionsMore(questions, false);
+                    return new QuestionsMore(list, false);
                 }
             }
             catch (Exception ex)
@@ -398,7 +400,7 @@ namespace NewKnowledgeAPI.Q.Questions
             return new QuestionsMore([], false);
         }
 
-        public async Task<List<QuestDto>> GetQuests(List<string> words, int count)
+        public async Task<List<QuestionRowDto>> GetQuests(List<string> words, int count)
         {
             var myContainer = await container();
             try
@@ -424,18 +426,18 @@ namespace NewKnowledgeAPI.Q.Questions
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
 
 
-                List<QuestDto> questDtos = [];
+                List<QuestionRowDto> questDtos = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                using (FeedIterator<QuestDto> queryResultSetIterator = 
-                    myContainer!.GetItemQueryIterator<QuestDto>(queryDefinition))
+                using (FeedIterator<QuestionRowDto> queryResultSetIterator = 
+                    myContainer!.GetItemQueryIterator<QuestionRowDto>(queryDefinition))
                 {
                     while (queryResultSetIterator.HasMoreResults)
                     {
-                        FeedResponse<QuestDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                        FeedResponse<QuestionRowDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                         return currentResultSet.ToList();
                         //foreach (Quest question in currentResultSet)
                         //{
-                        //    quests.Add(new QuestDto(question));
+                        //    quests.Add(new QuestionRowDto(question));
                         //}
                     }
                 }
@@ -488,38 +490,21 @@ namespace NewKnowledgeAPI.Q.Questions
         public async Task<Question> SetAnswerTitles(Question question, 
             CategoryService categoryService, AnswerService answerService)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers) = question;
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers, relatedFilters) = question;
             CategoryKey categoryKey = new(PartitionKey, question.ParentCategory!);
             // get category Title
             CategoryEx categoryEx = await categoryService.GetCategory(categoryKey);
             var (category, message) = categoryEx;
             question.CategoryTitle = category != null ? category.Title : "NotFound Category";
-            //if (AssignedAnswers.Count > 0)
-            //{
-            //    var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
-            //    Dictionary<string, AnswerTitleLink> dict = await answerService.GetTitlesAndLinks(answerIds);
-            //    Console.WriteLine(JsonConvert.SerializeObject(dict));
-            //    foreach (var assignedAnswer in AssignedAnswers)
-            //    {
-            //        AnswerTitleLink titleLink = dict[assignedAnswer.AnswerKey.Id];
-            //        assignedAnswer.AnswerTitle = titleLink.Title;
-            //        assignedAnswer.AnswerLink = titleLink.Link;
-            //    }
-            //}
             await SetAnswerTitles(question, answerService);
             return question;
         }
 
         public async Task<Question> SetAnswerTitles(Question question, AnswerService answerService)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers) = question;
+            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers, relatedFilters) = question;
             if (AssignedAnswers.Count > 0)
             {
-                //var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
-                //Dictionary<string, string> answerTitles = await answerService.GetTitlesAndLinks(answerIds);
-                //Console.WriteLine(JsonConvert.SerializeObject(answerTitles));
-                //foreach (var assignedAnswer in AssignedAnswers)
-                //    assignedAnswer.AnswerTitle = answerTitles[assignedAnswer.AnswerKey.Id];
                 var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
                 Dictionary<string, AnswerTitleLink> dict = await answerService.GetTitlesAndLinks(answerIds);
                 Console.WriteLine(JsonConvert.SerializeObject(dict));
@@ -540,7 +525,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<QuestionEx> AssignFilter(RelatedFilterDto dto)
         {
-            var (questionKey, filter, created, modified) = dto;
+            var (questionKey, filter, created, modified, numOfUsage) = dto;
             QuestionEx questionEx = await GetQuestion(questionKey!);
             var (question, msg) = questionEx;
             if (question != null)

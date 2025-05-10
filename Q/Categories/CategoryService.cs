@@ -106,8 +106,8 @@ namespace NewKnowledgeAPI.Q.Categories
                     {
                         var questionService = new QuestionService(Db);
                         QuestionsMore questionsMore = await questionService.GetQuestions(Id, 0, pageSize, includeQuestionId);
-                        category.Questions = questionsMore.questions;
-                        category.HasMoreQuestions = questionsMore.hasMoreQuestions;
+                        category.Questions = questionsMore.QuestionRows.Select(questionRow => new Question(questionRow)).ToList();
+                        category.HasMoreQuestions = questionsMore.HasMoreQuestions;
                     }
                 }
                 return new CategoryEx(category, "");
@@ -241,7 +241,7 @@ namespace NewKnowledgeAPI.Q.Categories
             CategoryEx categoryEx = await AddNewCategory(c);
 
             // update parentCategory
-            categoryDto.Modified = categoryDto.Archived;
+            categoryDto.Modified = categoryDto.Modified;
             await UpdateHasSubCategories(categoryDto);
 
             return categoryEx;
@@ -274,7 +274,7 @@ namespace NewKnowledgeAPI.Q.Categories
                 Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);
 
                 // update parentCategory
-                categoryDto.Modified = categoryDto.Archived;
+                categoryDto.Modified = categoryDto.Modified;
                 await UpdateHasSubCategories(categoryDto);
 
                 return new CategoryEx(category, msg);
@@ -425,13 +425,13 @@ namespace NewKnowledgeAPI.Q.Categories
                         new PartitionKey(categoryDto.PartitionKey)
                     );
                 Category category = aResponse.Resource;
-                category.Archived = new WhoWhen(categoryDto.Archived!.NickName);
+                category.Archived = new WhoWhen(categoryDto.Modified!.NickName);
                 aResponse = await myContainer.ReplaceItemAsync(category, category.Id, new PartitionKey(category.PartitionKey));
                 msg = $"Updated Question {category.PartitionKey}/{category.Id}. {category.Title}";
                 Console.WriteLine(msg);
 
                 // update parentCategory
-                categoryDto.Modified = categoryDto.Archived;
+                categoryDto.Modified = categoryDto.Modified;
                 await UpdateHasSubCategories(categoryDto);
 
                 return new CategoryEx(aResponse.Resource, msg);

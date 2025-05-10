@@ -7,6 +7,7 @@ using System.Net;
 using NewKnowledgeAPI.A.Groups.Model;
 using NewKnowledgeAPI.A.Answers.Model;
 using NewKnowledgeAPI.A.Answers;
+using NewKnowledgeAPI.Q.Questions.Model;
 
 namespace NewKnowledgeAPI.A.Groups
 {
@@ -107,7 +108,8 @@ namespace NewKnowledgeAPI.A.Groups
                     {
                         var answerService = new AnswerService(Db);
                         AnswersMore answersMore = await answerService.GetAnswers(Id, 0, pageSize, includeAnswerId);
-                        group.Answers = answersMore.answers;
+
+                        group.Answers = answersMore.AnswerRows.Select(answerRow => new Answer(answerRow)).ToList();
                         group.HasMoreAnswers = answersMore.hasMoreAnswers;
                     }
                 }
@@ -242,7 +244,7 @@ namespace NewKnowledgeAPI.A.Groups
             GroupEx groupEx = await AddNewGroup(c);
 
             // update parentGroup
-            groupDto.Modified = groupDto.Archived;
+            groupDto.Modified = groupDto.Modified;
             await UpdateHasSubGroups(groupDto);
 
             return groupEx;
@@ -275,7 +277,7 @@ namespace NewKnowledgeAPI.A.Groups
                 Console.WriteLine("Updated Group [{0},{1}].\n \tBody is now: {2}\n", group.Title, group.Id, group);
 
                 // update parentGroup
-                groupDto.Modified = groupDto.Archived;
+                groupDto.Modified = groupDto.Modified;
                 await UpdateHasSubGroups(groupDto);
 
                 return new GroupEx(group, msg);
@@ -426,13 +428,13 @@ namespace NewKnowledgeAPI.A.Groups
                         new PartitionKey(groupDto.PartitionKey)
                     );
                 Group group = aResponse.Resource;
-                group.Archived = new WhoWhen(groupDto.Archived!.NickName);
+                group.Archived = new WhoWhen(groupDto.Modified!.NickName);
                 aResponse = await myContainer.ReplaceItemAsync(group, group.Id, new PartitionKey(group.PartitionKey));
                 msg = $"Updated Answer {group.PartitionKey}/{group.Id}. {group.Title}";
                 Console.WriteLine(msg);
 
                 // update parentGroup
-                groupDto.Modified = groupDto.Archived;
+                //groupDto.Modified = groupDto.Archived;
                 await UpdateHasSubGroups(groupDto);
 
                 return new GroupEx(aResponse.Resource, msg);

@@ -51,7 +51,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         }
 
         public Category(CategoryDto categoryDto)
-            :base(categoryDto.Created, categoryDto.Modified, categoryDto.Archived)
+            :base(categoryDto.Created, categoryDto.Modified, null)
         {
             Type = "category";
             Id = categoryDto.Id;

@@ -21,7 +21,6 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             Id = id;
         }
 
-
         public QuestionKey(Question question)
         {
              PartitionKey = question.PartitionKey;

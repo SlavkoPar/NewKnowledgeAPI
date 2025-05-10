@@ -46,12 +46,12 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             //if (questionsMore.questions.Count > 0) {
             //    Question q = questionsMore.questions.First();
             //}
-            Questions = Questions2Dto(questionsMore.questions);
-            HasMoreQuestions = questionsMore.hasMoreQuestions;
+            Questions = Questions2Dto(questionsMore.QuestionRows.Select(row => new Question(row)).ToList());
+            HasMoreQuestions = questionsMore.HasMoreQuestions;
         }
 
         public CategoryDto(Category category)
-            : base(category.Created, category.Modified, category.Archived)
+            : base(category.Created, category.Modified)
         {
             Id = category.Id;
             PartitionKey = category.PartitionKey!;
@@ -75,6 +75,17 @@ namespace NewKnowledgeAPI.Q.Categories.Model
                 Questions = Questions2Dto(category.Questions!);
                 HasMoreQuestions = category.HasMoreQuestions;
             }
+        }
+
+        public List<QuestionRowDto> Questions2Dto(List<QuestionRow> questionRows)
+        {
+            List<QuestionRowDto> list = [];
+            foreach (var questionRow in questionRows)
+            {
+                //Console.WriteLine(JsonConvert.SerializeObject(question));
+                list.Add(new QuestionRowDto(questionRow));
+            }
+            return list;
         }
 
         public List<QuestionDto> Questions2Dto(List<Question> questions)

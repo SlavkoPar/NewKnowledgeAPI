@@ -1,11 +1,11 @@
 ﻿using NewKnowledgeAPI.Common;
+using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 
 namespace NewKnowledgeAPI.A.Answers.Model
 {
-    public class Answer : Record, IDisposable
+    public class AnswerRow : Record
     {
-        public string Type { get; set; }
 
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
@@ -13,45 +13,91 @@ namespace NewKnowledgeAPI.A.Answers.Model
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
 
-        public string? GroupTitle { get; set; }
         public string Title { get; set; }
         public string? Link { get; set; }
 
         public string? ParentGroup { get; set; }
+
+        public AnswerRow()
+            : base(new WhoWhen("Admin"), null, null)
+        {
+        }
+
+        public AnswerRow(AnswerData answerData)
+                : base(new WhoWhen("Admin"), null, null)
+        {
+            string s = DateTime.Now.Ticks.ToString();
+            Id = answerData.Id ?? s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            PartitionKey = answerData.ParentGroup!;
+            ParentGroup = answerData.ParentGroup;
+            Title = answerData.Title;
+            Link = answerData.Link;
+        }
+
+        public AnswerRow(AnswerDto answerDto)
+        : base(answerDto.Created, answerDto.Modified, null)
+        {
+            string s = DateTime.Now.Ticks.ToString();
+            Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            PartitionKey = answerDto.PartitionKey!;
+            ParentGroup = answerDto.ParentGroup;
+            Title = answerDto.Title;
+            Link = answerDto.Link;
+        }
+
+        public AnswerRow(AnswerRow row)
+            : base(row.Created, row.Modified, row.Archived)
+        {
+            Id = row.Id;
+            PartitionKey = row.PartitionKey!;
+            Title = row.Title;
+            Link = row.Link;
+            ParentGroup = row.ParentGroup;
+        }
+
+        public void Deconstruct(out string partitionKey, out string id, 
+            out string title, out string? link, out string? parentGroup)
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+            title = Title;
+            link = Link;
+            parentGroup = ParentGroup;
+        }
+    }
+
+    public class Answer : AnswerRow, IDisposable
+    {
+        public string Type { get; set; }
+        public string? GroupTitle { get; set; }
         public int Source { get; set; }
         public int Status { get; set; }
 
         public Answer()
             :  base()
         {
+            Type = "answer";
         }
 
-    public Answer(AnswerData answerData)
-            : base(new WhoWhen("Admin"), null, null)
+        public Answer(AnswerRow answerRow)
+            : base(answerRow)
         {
-            string s = DateTime.Now.Ticks.ToString();
-            Id = answerData.Id ?? s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
             Type = "answer";
-            PartitionKey = answerData.ParentGroup!;
-            ParentGroup = answerData.ParentGroup;
+        }
+        public Answer(AnswerData answerData)
+            : base(answerData)
+        {
+            Type = "answer";
             GroupTitle = null;
-            Title = answerData.Title;
-            Link = answerData.Link;
             Source = 0;
             Status = 0;
         }
 
         public Answer(AnswerDto answerDto)
-        : base(answerDto.Created, answerDto.Modified, answerDto.Archived)
+        : base(answerDto)
         {
-            string s = DateTime.Now.Ticks.ToString();
-            Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
             Type = "answer";
-            PartitionKey = answerDto.PartitionKey!;
-            ParentGroup = answerDto.ParentGroup;
             GroupTitle = null;
-            Title = answerDto.Title;
-            Link = answerDto.Link;
             Source = answerDto.Source;
             Status = answerDto.Status;    
         }

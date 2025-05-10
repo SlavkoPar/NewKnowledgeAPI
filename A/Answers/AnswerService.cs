@@ -253,7 +253,7 @@ namespace NewKnowledgeAPI.A.Answers
                 //    HttpStatusCode statusCode = await CheckDuplicate(answerDto.Title);
                 //}
                 // TODO check if is it already Archived
-                answer.Archived = new WhoWhen(answerDto.Archived!.NickName);
+                answer.Archived = new WhoWhen(answerDto.Modified!.NickName);
 
                 aResponse = await myContainer.ReplaceItemAsync(answer, answer.Id, new PartitionKey(answer.PartitionKey));
                 Console.WriteLine("Updated Answer [{0},{1}].\n \tBody is now: {2}\n", answer.Title, answer.Id, answer);
@@ -277,45 +277,12 @@ namespace NewKnowledgeAPI.A.Answers
             return new AnswerEx(null, "Server Problem");
         }
 
-        /*
-        public async Task<string> DeleteAnswer(AnswerDto answerDto)
-        {
-            var myContainer = await container();
-            try
-            {
-                // Read the item to see if it exists.
-
-                ItemResponse<Answer> aResponse =
-                    await myContainer!.ReadItemAsync<Answer>(
-                        answerDto.Id,
-                        new PartitionKey(answerDto.PartitionKey)
-                    );
-                Answer answer = aResponse.Resource;
-                aResponse = await myContainer.DeleteItemAsync<Answer>(answer.Id, new PartitionKey(answer.PartitionKey));
-                Console.WriteLine("Deleted Answer [{0},{1}].\n \tBody is now: {2}\n", answer.Title, answer.Id, answer);
-                return "OK";
-            }
-            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-            {
-                Console.WriteLine("Answer item {0} NotFound in database.\n", answerKey.Id); //, aResponse.RequestCharge);
-                return "NotFound";
-            }
-            catch (Exception ex)
-            {
-                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this reans.
-                Console.WriteLine(ex.Message);
-                return ex.Message;
-            }
-        }
-        */
-
         public async Task<AnswersMore> GetAnswers(string parentGroup, int startCursor, int pageSize, string includeAnswerId)
         {
             var myContainer = await container();
-            try
-            {
-                // OR c.ParentGroup = ''
-                string sqlQuery = $"SELECT * FROM c WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND " +
+            try { 
+
+                string sqlQuery = $"SELECT c.id, c.partitionKey, c.ParentGroup, c.Title, c.Link FROM c WHERE c.Type = 'answer' AND IS_NULL(c.Archived) AND " +
                     $" c.ParentGroup = '{parentGroup}' ORDER BY c.Title OFFSET {startCursor} ";
                 sqlQuery += includeAnswerId == "null"
                     ? $"LIMIT {pageSize}"
@@ -326,27 +293,27 @@ namespace NewKnowledgeAPI.A.Answers
                 int n = 0;
                 bool included = false;
 
-                List<Answer> answers = [];
+                List<AnswerRow> list = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                FeedIterator<Answer> queryResultSetIterator = myContainer!.GetItemQueryIterator<Answer>(queryDefinition);
+                FeedIterator<AnswerRow> queryResultSetIterator = myContainer!.GetItemQueryIterator<AnswerRow>(queryDefinition);
                 while (queryResultSetIterator.HasMoreResults)
                 {
-                    FeedResponse<Answer> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                    foreach (Answer answer in currentResultSet)
+                    FeedResponse<AnswerRow> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                    foreach (AnswerRow answerRow in currentResultSet)
                     {
-                        if (includeAnswerId != null && answer.Id == includeAnswerId)
+                        if (includeAnswerId != null && answerRow.Id == includeAnswerId)
                         {
                             included = true;
                         }
-                        Console.WriteLine(">>>>>>>> answer is: {0}", JsonConvert.SerializeObject(answer));
-                        answers.Add(answer);
+                        Console.WriteLine(">>>>>>>> answer is: {0}", JsonConvert.SerializeObject(answerRow));
+                        list.Add(answerRow);
                         n++;
                         if (n >= pageSize && (includeAnswerId == null || included))
                         {
-                            return new AnswersMore(answers, true);
+                            return new AnswersMore(list, true);
                         }
                     }
-                    return new AnswersMore(answers, false);
+                    return new AnswersMore(list, false);
                 }
             }
             catch (Exception ex)
@@ -357,7 +324,7 @@ namespace NewKnowledgeAPI.A.Answers
             return new AnswersMore([], false);
         }
 
-        public async Task<List<ShortAnswerDto>> GetShortAnswers(List<string> words, int count)
+        public async Task<List<AnswerRowDto>> GetShortAnswers(List<string> words, int count)
         {
             var myContainer = await container();
             try
@@ -383,12 +350,12 @@ namespace NewKnowledgeAPI.A.Answers
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
 
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                using (FeedIterator<ShortAnswerDto> queryResultSetIterator = 
-                    myContainer!.GetItemQueryIterator<ShortAnswerDto>(queryDefinition))
+                using (FeedIterator<AnswerRowDto> queryResultSetIterator = 
+                    myContainer!.GetItemQueryIterator<AnswerRowDto>(queryDefinition))
                 {
                     while (queryResultSetIterator.HasMoreResults)
                     {
-                        FeedResponse<ShortAnswerDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
+                        FeedResponse<AnswerRowDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                         return currentResultSet.ToList();
                     }
                 }

@@ -9,27 +9,33 @@ using NewKnowledgeAPI.Q.Questions.Model;
 
 namespace NewKnowledgeAPI.Q.Questions.Model
 {
-    public class QuestionDto : RecordDto
+    //public class QuestionRowDto : RecordDto
+    public class QuestionRowDto
     {
         public string PartitionKey { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
         public string? CategoryTitle { get; set; }
         public string? ParentCategory { get; set; }
-        public List<AssignedAnswerDto>? AssignedAnswerDtos { get; set; }
-        public int NumOfAssignedAnswers { get; set; }
-        public List<RelatedFilterDto>? RelatedFilterDtos { get; set; }
-        public int NumOfRelatedFilters { get; set; }
-        public int Source { get; set; }
-        public int Status { get; set; }
-
-        public QuestionDto()
-            : base()
+       
+       
+        public QuestionRowDto()
+            //: base()
         {
         }
 
-        public QuestionDto(Question question)
-            : base(question.Created, question.Modified, question.Archived)
+        public QuestionRowDto(QuestionRow questionRow)
+           //: base(questionRow.Created, questionRow.Modified, questionRow.Archived)
+        {
+            //Console.WriteLine(JsonConvert.SerializeObject(question));
+            PartitionKey = questionRow.PartitionKey;
+            Id = questionRow.Id;
+            Title = questionRow.Title;
+            ParentCategory = questionRow.ParentCategory;
+        }
+
+        public QuestionRowDto(Question question)
+            //: base(question.Created, question.Modified, question.Archived)
         {
             //Console.WriteLine(JsonConvert.SerializeObject(question));
             var questionKey = new QuestionKey(question);
@@ -41,31 +47,68 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             //
             // We don't modify question AssignedAnswers through QuestionDto
             //
-            //var assignedAnswers = question.AssignedAnswers ?? [];
-            //assignedAnswers.Sort(AssignedAnswer.Comparer); // put the most rated AssignedAnswers to the top
-            //AssignedAnswerDtos = assignedAnswers
-            //    .Select(assignedAnswer => new AssignedAnswerDto(questionKey, assignedAnswer))
-            //    .ToList();
-            //NumOfAssignedAnswers = question.NumOfAssignedAnswers;
-            //
-            //var relatedFilters = question.AssignedAnswers ?? [];
-            //assignedAnswers.Sort(AssignedAnswer.Comparer); // put the most rated AssignedAnswers to the top
-            //RelatedFilterDtos = relatedFilters
-            //    //.Select(relatedFilters => new RelatedFilterDto(questionKey, relatedFilters))
-            //    .Select(relatedFilters => new RelatedFilterDto(questionKey, relatedFilters))
-            //    .ToList();
-            //NumOfRelatedFilters = question.NumOfRelatedFilters;
-            Source = question.Source;
-            Status = question.Status;
-
-            //QuestionKey questionKey = new(question);
-            //AssignedAnswerDtos = new List<AssignedAnswerDto>();
-            //foreach (AssignedAnswer assignedAnswer in question.AssignedAnswers) {
-            //    AssignedAnswerDtos.Add(new AssignedAnswerDto(questionKey, assignedAnswer));
-            //}
         }
     }
- }
+
+    public class QuestionDto : RecordDto // QuestionRowDto
+    {
+        /// <summary>
+        ///     QuestionRowDto
+        /// </summary>
+        public string PartitionKey { get; set; }
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public string? CategoryTitle { get; set; }
+        public string? ParentCategory { get; set; }
+        /// <summary>
+        /// QuestionDto
+        /// </summary>
+        public List<AssignedAnswerDto>? AssignedAnswerDtos { get; set; }
+        public int NumOfAssignedAnswers { get; set; }
+        public List<RelatedFilterDto>? RelatedFilterDtos { get; set; }
+        public int NumOfRelatedFilters { get; set; }
+        public int Source { get; set; }
+        public int Status { get; set; }
 
 
+        public QuestionDto()
+            : base()
+        {
+        }
 
+        public QuestionDto(Question question)
+        //: base(question)
+        : base(question.Created, question.Modified) //, question.Archived)
+        {
+            var questionKey = new QuestionKey(question);
+            ////////////////
+            // QuestionDto
+            PartitionKey = question.PartitionKey;
+            Id = question.Id;
+            Title = question.Title;
+            CategoryTitle = question.CategoryTitle;
+            ParentCategory = question.ParentCategory;
+            ///////////////////////////////////////////////
+            
+            //Console.WriteLine(JsonConvert.SerializeObject(question));
+            //var questionKey = new QuestionKey(question);
+            
+            var assignedAnswers = question.AssignedAnswers ?? [];
+            assignedAnswers.Sort(AssignedAnswer.Comparer); // put the most rated AssignedAnswers to the top
+            AssignedAnswerDtos = assignedAnswers
+                .Select(assignedAnswer => new AssignedAnswerDto(questionKey, assignedAnswer))
+                .ToList();
+            NumOfAssignedAnswers = question.NumOfAssignedAnswers ?? 0;
+
+            var relatedFilters = question.RelatedFilters ?? [];
+            relatedFilters.Sort(RelatedFilter.Comparer); // put the most rated AssignedAnswers to the top
+            RelatedFilterDtos = relatedFilters
+                //.Select(relatedFilters => new RelatedFilterDto(questionKey, relatedFilters))
+                .Select(relatedFilters => new RelatedFilterDto(questionKey, relatedFilters))
+                .ToList();
+            NumOfRelatedFilters = question.NumOfRelatedFilters ?? 0 ;
+            Source = question.Source;
+            Status = question.Status;
+        }
+    }
+}

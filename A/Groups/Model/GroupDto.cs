@@ -2,6 +2,7 @@
 using Newtonsoft.Json;
 using System.Net;
 using NewKnowledgeAPI.A.Answers.Model;
+using NewKnowledgeAPI.Q.Questions.Model;
 
 namespace NewKnowledgeAPI.A.Groups.Model
 {
@@ -42,17 +43,17 @@ namespace NewKnowledgeAPI.A.Groups.Model
             Level = 1;
             Variations = [];
 
-            Console.WriteLine("odgovora {0}", answersMore.answers.Count);
+            Console.WriteLine("odgovora {0}", answersMore.AnswerRows.Count);
             //if (answersMore.answers.Count > 0) {
             //    Answer q = answersMore.answers.First();
             //}
-            Answers = Answers2Dto(answersMore.answers);
+            Answers = Answers2Dto(answersMore.AnswerRows.Select(row => new Answer(row)).ToList());
             HasMoreAnswers = answersMore.hasMoreAnswers;
         }
 
 
         public GroupDto(Group group)
-            : base(group.Created, group.Modified, group.Archived)
+            : base(group.Created, group.Modified)
         {
             Id = group.Id;
             PartitionKey = group.PartitionKey!;

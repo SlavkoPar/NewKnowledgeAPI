@@ -5,47 +5,93 @@ using Newtonsoft.Json;
 
 namespace NewKnowledgeAPI.Q.Questions.Model
 {
-    public class Question : Record, IDisposable
+    public class QuestionRow : Record
     {
-        public string Type { get; set; }
-
         [JsonProperty(PropertyName = "id")]
         public string Id { get; set; }
 
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
 
+        public string? ParentCategory { get; set; }
+
+        public string Title { get; set; }
+
+        public QuestionRow()
+            : base(new WhoWhen("Admin"), null, null)
+        {
+            Title = string.Empty;
+        }
+
+        public QuestionRow(QuestionData data)
+           : base(new WhoWhen("Admin"), null, null)
+        {
+            string s = DateTime.Now.Ticks.ToString();
+            Id = data.Id ?? s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            PartitionKey = data.ParentCategory!;
+            ParentCategory = data.ParentCategory;
+            Title = data.Title;
+        }
+
+        public QuestionRow(QuestionDto dto)
+            : base(dto.Created, dto.Modified, null)
+        {
+            string s = DateTime.Now.Ticks.ToString();
+            Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            PartitionKey = dto.PartitionKey!;
+            Title = dto.Title;
+            ParentCategory = dto.ParentCategory;
+        }
+
+        public QuestionRow(QuestionRow row)
+            : base(row.Created, row.Modified, row.Archived)
+        {
+            Id = row.Id;
+            PartitionKey = row.PartitionKey!;
+            Title = row.Title;
+            ParentCategory = row.ParentCategory;
+        }
+
+        public void Deconstruct(out string partitionKey, out string id, out string title, out string? parentCategory)
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+            title = Title;
+            parentCategory = ParentCategory;
+        }
+
+    }
+
+    public class Question : QuestionRow, IDisposable
+    {
+        public string Type { get; set; }
+
         [JsonProperty(PropertyName = "CategoryTitle", NullValueHandling = NullValueHandling.Ignore)]
         public string? CategoryTitle { get; set; }
 
-        public string Title { get; set; }
-        public string? ParentCategory { get; set; }
 
-        public List<AssignedAnswer> AssignedAnswers { get; set; }
-        public int NumOfAssignedAnswers  {get; set;}
+        public List<AssignedAnswer>? AssignedAnswers { get; set; }
+        public int? NumOfAssignedAnswers  {get; set;}
 
-        public List<RelatedFilter> RelatedFilters { get; set; }
-        public int NumOfRelatedFilters { get; set; }
+        public List<RelatedFilter>? RelatedFilters { get; set; }
+        public int? NumOfRelatedFilters { get; set; }
 
         public int Source { get; set; }
         public int Status { get; set; }
 
         public Question()
-            :  base()
+            : base()   
         {
+            Type = "question";
         }
 
   
         public Question(QuestionData questionData)
-            : base(new WhoWhen("Admin"), null, null)
+            : base(questionData)
         {
-            string s = DateTime.Now.Ticks.ToString();
-            Id = questionData.Id ?? s.Substring(s.Length-10);// Guid.NewGuid().ToString();
             Type = "question";
-            PartitionKey = questionData.ParentCategory!;
             ParentCategory = questionData.ParentCategory;
             CategoryTitle = null;
-            Title = questionData.Title;
 
             // Assigned Answers
             AssignedAnswers = [];
@@ -75,26 +121,29 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         }
 
         public Question(QuestionDto questionDto)
-        : base(questionDto.Created, questionDto.Modified, questionDto.Archived)
+        : base(questionDto)
         {
-            string s = DateTime.Now.Ticks.ToString();
-            Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
             Type = "question";
-            PartitionKey = questionDto.PartitionKey!;
-            ParentCategory = questionDto.ParentCategory;
             CategoryTitle = null;
-            Title = questionDto.Title;
             //AssignedAnswers = questionDto.AssignedAnswers!;
             //NumOfAssignedAnswers = questionDto.NumOfAssignedAnswers;
             Source = questionDto.Source;
             Status = questionDto.Status;    
         }
 
+        public Question(QuestionRow questionRow)
+        : base(questionRow)
+        {
+            Type = "question";
+        }
+
         //public override string ToString() => 
         //    $"{PartitionKey}/{Id}, {Title} {ParentCategory} ";
 
         public void Deconstruct(out string partitionKey, out string id, out string title, out string? parentCategory,
-                                out string type, out int source, out int status, out List<AssignedAnswer> assignedAnswers)
+                                out string type, out int source, out int status, 
+                                out List<AssignedAnswer>? assignedAnswers, // out int? numOfAssignedAnswers) //,
+                                out List<RelatedFilter>? relatedFilters) //, out int? numOfRelatedFilters)
         {
             partitionKey = PartitionKey;
             id = Id;
@@ -104,6 +153,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             source = Source;
             status = Status;
             assignedAnswers = AssignedAnswers;
+            //numOfAssignedAnswers = NumOfAssignedAnswers;
+            //numOfRelatedFilters = NumOfRelatedFilters;
+            relatedFilters = RelatedFilters;
         }
 
         public void Dispose()

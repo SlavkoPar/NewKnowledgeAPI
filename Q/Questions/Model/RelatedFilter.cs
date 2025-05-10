@@ -9,11 +9,11 @@ namespace NewKnowledgeAPI.Q.Questions.Model
     public class RelatedFilter: IDisposable
     {
         [JsonProperty(PropertyName = "QuestionKey", NullValueHandling = NullValueHandling.Ignore)]
-
         public QuestionKey? QuestionKey { get; set; } // not stored to db
+
         public string Filter { get; set; }
         public WhoWhen Created { get; set; }
-        public WhoWhen? LastUsed { get; set; }
+        public WhoWhen LastUsed { get; set; }
 
         public uint NumOfUsages { get; set; } // filter used in Chatbot AutoSuggestQuestions
 
@@ -23,6 +23,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 
         public RelatedFilter(string filter, WhoWhen created)
         {
+            QuestionKey = null;
             Filter = filter;
             Created = created;
             LastUsed = created;
@@ -35,24 +36,24 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 
         public RelatedFilter(RelatedFilterDto dto)
         {
-            var (questionKey, filter, created, lastUsed) = dto;
+            var (questionKey, filter, created, lastUsed, numOfUsage) = dto;
             Filter = filter;
-            QuestionKey = questionKey;
+            QuestionKey = null; // questionKey;
             Created = new WhoWhen(created);
-            LastUsed = new WhoWhen(lastUsed == null ? created : lastUsed);
+            LastUsed = new WhoWhen(lastUsed != null ? lastUsed : created);
         }
 
         //public override string ToString() => 
         //    $"{PartitionKey}/{Id}, {Title} {ParentGroup} ";
 
 
-        internal void Deconstruct(out QuestionKey? questionKey, out string? filter,
-            out WhoWhen created, out WhoWhen? used,  out uint numOfUsages)
+        internal void Deconstruct(out QuestionKey? questionKey, out string filter,
+            out WhoWhen created, out WhoWhen lastUsed,  out uint numOfUsages)
         {
             questionKey = QuestionKey;
             filter = Filter;
             created = Created;
-            used = LastUsed;
+            lastUsed = LastUsed;
             numOfUsages = NumOfUsages;
         }
 

@@ -46,8 +46,8 @@ namespace NewKnowledgeAPI.A.Answers
                 {
                     var answerService = new AnswerService(dbService);
                     AnswersMore answersMore = await answerService.GetAnswers(parentGroup, startCursor, pageSize, includeAnswerId);
-                    Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", answersMore.answers.Count);
-                    GroupDto groupDto = new(groupKey, answersMore);
+                    Console.WriteLine(">>>>>>>>>>>>>>>>>>>>>> Count {0}", answersMore.AnswerRows.Count);
+                    var groupDto = new GroupDto(groupKey, answersMore);
                     groupDto.Title = group.Title;
                     return Ok(new GroupDtoEx(groupDto, msg));
                 }
@@ -98,7 +98,7 @@ namespace NewKnowledgeAPI.A.Answers
                                 .Where(w => w.Length > 2)
                                 .ToList();
                 var answerService = new AnswerService(dbService);
-                List<ShortAnswerDto> answers = await answerService.GetShortAnswers(words, count);
+                List<AnswerRowDto> answers = await answerService.GetShortAnswers(words, count);
                 return Ok(answers);
             }
             catch (Exception ex)
@@ -171,7 +171,7 @@ namespace NewKnowledgeAPI.A.Answers
                 AnswerEx answerEx = await answerService.DeleteAnswer(answerDto);
                 if (answerEx!.answer != null)
                 {
-                    answerDto.Modified = answerDto.Archived;
+                    answerDto.Modified = answerDto.Modified;
                     await groupService.UpdateNumOfAnswers(answerDto, -1);
                     return Ok(new AnswerDtoEx(answerEx));
                 }

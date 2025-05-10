@@ -6,11 +6,11 @@ namespace NewKnowledgeAPI.A.Answers.Model
 {
     public class AnswersMore
     {
-        public List<Answer> answers { get; set; }
+        public List<AnswerRow> AnswerRows { get; set; }
         public bool hasMoreAnswers { get; set; }
-        public AnswersMore(List<Answer> answers, bool hasMore)
+        public AnswersMore(List<AnswerRow> answerRows, bool hasMore)
         {
-            this.answers = answers;
+            AnswerRows = answerRows;
             hasMoreAnswers = hasMore;
         }
     }
