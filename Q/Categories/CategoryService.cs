@@ -139,14 +139,16 @@ namespace NewKnowledgeAPI.Q.Categories
 
         public async Task AddCategory(CategoryData categoryData)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Categories, Questions) = categoryData;
+            //var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Categories, Questions) = categoryData;
+            var (partitionKey, id, title, header, parentCategory, kind, level, variations, categories, questions) = categoryData;
+
             //Console.WriteLine(JsonConvert.SerializeObject(categoryData));
             var myContainer = await container();
 
-            if (Questions != null && Id == "DOMAIN")
+            if (questions != null && id == "DOMAIN")
             {
                 for (var i = 1; i <= 500; i++)
-                    Questions!.Add(new QuestionData(Id, $"Test row for DOMAIN " + i.ToString("D3")));
+                    questions!.Add(new QuestionData(id, $"Test row for DOMAIN " + i.ToString("D3")));
             }
 
             try
@@ -156,9 +158,9 @@ namespace NewKnowledgeAPI.Q.Categories
                 if (categoryEx.category != null)
                 {
                     Category category = categoryEx.category;
-                    if (Categories != null)
+                    if (categories != null)
                     {
-                        foreach (var subCategoryData in Categories)
+                        foreach (var subCategoryData in categories)
                         {
                             subCategoryData.PartitionKey = subCategoryData.Id;
                             subCategoryData.ParentCategory = category.Id;
@@ -166,10 +168,10 @@ namespace NewKnowledgeAPI.Q.Categories
                             await AddCategory(subCategoryData);
                         }
                     }
-                    if (Questions != null)
+                    if (questions != null)
                     {
                         QuestionService questionService = new(Db!);
-                        foreach (var questionData in Questions)
+                        foreach (var questionData in questions)
                         {
                             questionData.ParentCategory = category.Id;
                             await questionService.AddQuestion(questionData);
@@ -188,7 +190,10 @@ namespace NewKnowledgeAPI.Q.Categories
 
         public async Task<CategoryEx> AddNewCategory(Category category)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Questions) = category;
+            //var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Questions) = category;
+            var (partitionKey, id, parentCategory, title, header, level, kind,
+                hasSubCategories, hasMoreQuestion, variations, questions) = category;
+
             var myContainer = await container();
             string msg = string.Empty;
             try
@@ -196,10 +201,10 @@ namespace NewKnowledgeAPI.Q.Categories
                 // Check if the id already exists
                 ItemResponse<Category> aResponse =
                     await myContainer!.ReadItemAsync<Category>(
-                        Id,
-                        new PartitionKey(PartitionKey)
+                        id,
+                        new PartitionKey(partitionKey)
                     );
-                msg = $"Category in database with Id: {Id} already exists"; //, aResponse.Resource.Id
+                msg = $"Category in database with Id: {id} already exists"; //, aResponse.Resource.Id
                 Console.WriteLine(msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
@@ -207,8 +212,8 @@ namespace NewKnowledgeAPI.Q.Categories
                 try
                 {
                     // Check if the title already exists
-                    HttpStatusCode statusCode = await CheckDuplicate(Title);
-                    msg = $"Category in database with Title: {Title} already exists";
+                    HttpStatusCode statusCode = await CheckDuplicate(title);
+                    msg = $"Category in database with Title: {title} already exists";
                     Console.WriteLine(msg);
                 }
                 catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
@@ -217,7 +222,7 @@ namespace NewKnowledgeAPI.Q.Categories
                     ItemResponse<Category> aResponse =
                         await myContainer!.CreateItemAsync(
                             category,
-                            new PartitionKey(PartitionKey)
+                            new PartitionKey(partitionKey)
                         );
                     // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                     Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);

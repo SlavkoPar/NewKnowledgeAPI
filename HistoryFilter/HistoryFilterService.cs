@@ -93,8 +93,9 @@ namespace NewKnowledgeAPI.HistFilter
         }
 
 
-        public async Task<QuestionEx> CreateHistory(HistoryFilter historyFilter, QuestionService questionService)
+        public async Task<QuestionEx> CreateHistoryFilter(HistoryFilter historyFilter, QuestionService questionService)
         {
+            var(_, _, questionKey, filter, created) = historyFilter;
             var myContainer = await container();
             try
             {
@@ -103,27 +104,30 @@ namespace NewKnowledgeAPI.HistFilter
                 if (history == null)
                     return new QuestionEx(null, msg);
 
-                QuestionEx questionEx = await questionService.GetQuestion(history.QuestionKey);
+                QuestionEx questionEx = await questionService.GetQuestion(questionKey);
                 var (question, message) = questionEx;
+                //Console.WriteLine(JsonConvert.SerializeObject(question));
                 if (question != null)
                 {
-                    List<RelatedFilter> relatedFilters = question.RelatedFilters;
-                    var bFound = false;
-                    foreach (RelatedFilter relatedFilter in relatedFilters)
+                    List<RelatedFilter> relatedFilters = question.RelatedFilters ?? [];
+                    var relatedFilter = relatedFilters.FirstOrDefault(relatedFilter => relatedFilter.IsSimmilar(filter));
+                    if (relatedFilter != null)
                     {
-                        if (relatedFilter.Equals(historyFilter.Filter))
+                        relatedFilter.NumOfUsages++;
+                        relatedFilter.LastUsed = historyFilter.Created;
+                        Console.WriteLine("RELATED SIMMILAR");
+                    }
+                    else
+                    { 
+                        if (relatedFilters.Count > 5)
                         {
-                            relatedFilter.NumOfUsages++;
-                            relatedFilter.LastUsed = historyFilter.Created;
-                            bFound = true;
-                            break;
+                            relatedFilters.Sort(RelatedFilter.Comparer); // put the most rated RelatedFilters to the top
+                            relatedFilters = relatedFilters.Take(5).ToList();
                         }
+                        relatedFilters.Add(new RelatedFilter(historyFilter.Filter, created));
+                        Console.WriteLine("RELATED NOVI");
                     }
-                    if (!bFound)
-                    {
-                        relatedFilters.Add(new RelatedFilter(historyFilter.Filter, historyFilter.Created));
-                    }
-                    question.Modified = history.Created;
+                    question.Modified = created;
                     questionEx = await questionService.UpdateQuestionFilters(question, relatedFilters);
                 }
                 return questionEx;

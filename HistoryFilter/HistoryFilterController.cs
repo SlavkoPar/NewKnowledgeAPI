@@ -112,9 +112,9 @@ namespace NewKnowledgeAPI.HistFilter
                 Console.WriteLine("*********=====>>>>>> historyFilterDto");
                 Console.WriteLine(JsonConvert.SerializeObject(dto));
                 var questionService = new QuestionService(dbService);
-                var historyService = new HistoryFilterService(dbService);
+                var historyFilterService = new HistoryFilterService(dbService);
                 var historyFilter = new HistoryFilter(dto);
-                QuestionEx questionEx = await historyService.CreateHistory(historyFilter, questionService);
+                QuestionEx questionEx = await historyFilterService.CreateHistoryFilter(historyFilter, questionService);
                 return Ok(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)

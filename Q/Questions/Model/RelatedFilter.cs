@@ -27,6 +27,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             Filter = filter;
             Created = created;
             LastUsed = created;
+            NumOfUsages = 1;
         }
 
         //public RelatedQuestion(QuestionKey answerKey)
@@ -41,6 +42,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             QuestionKey = null; // questionKey;
             Created = new WhoWhen(created);
             LastUsed = new WhoWhen(lastUsed != null ? lastUsed : created);
+            NumOfUsages++;
         }
 
         //public override string ToString() => 
@@ -55,6 +57,12 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             created = Created;
             lastUsed = LastUsed;
             numOfUsages = NumOfUsages;
+        }
+
+        public bool IsSimmilar(string filter)
+        {   
+            // improve algo
+            return Filter.Equals(filter);
         }
 
         public static int Comparer(RelatedFilter x, RelatedFilter y)

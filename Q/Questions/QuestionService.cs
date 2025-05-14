@@ -179,7 +179,7 @@ namespace NewKnowledgeAPI.Q.Questions
                 msg = ex.Message;
                 Console.WriteLine(msg);
             }
-            Console.WriteLine(JsonConvert.SerializeObject(question));
+            //Console.WriteLine(JsonConvert.SerializeObject(question));
             Console.WriteLine("*****************************");
             return new QuestionEx(null, msg);
         }
@@ -426,7 +426,6 @@ namespace NewKnowledgeAPI.Q.Questions
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
 
 
-                List<QuestionRowDto> questDtos = [];
                 QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
                 using (FeedIterator<QuestionRowDto> queryResultSetIterator = 
                     myContainer!.GetItemQueryIterator<QuestionRowDto>(queryDefinition))

@@ -83,9 +83,12 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             : base()   
         {
             Type = "question";
+            CategoryTitle = null;
+            Source = 0;
+            Status = 0;
         }
 
-  
+
         public Question(QuestionData questionData)
             : base(questionData)
         {
@@ -135,6 +138,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         : base(questionRow)
         {
             Type = "question";
+            CategoryTitle = null;
+            Source = 0;
+            Status = 0;
         }
 
         //public override string ToString() => 

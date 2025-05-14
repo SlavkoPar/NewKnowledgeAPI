@@ -14,6 +14,8 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public string? PartitionKey { get; set; }
 
         public string Title { get; set; }
+        public string Header { get; set; }
+
         public int Kind { get; set; }
         public string? ParentCategory { get; set; }
         public int Level { get; set; }
@@ -38,6 +40,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Id = id;
             PartitionKey = partitionKey;
             Title = "deca";
+            Header = "peca";
             Kind = 1;
             Level = 1;
             Variations = [];
@@ -53,16 +56,20 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public CategoryDto(Category category)
             : base(category.Created, category.Modified)
         {
-            Id = category.Id;
-            PartitionKey = category.PartitionKey!;
-            Title = category.Title;
-            Kind = category.Kind;
-            ParentCategory = category.ParentCategory;
-            Level = category.Level;
-            Variations = category.Variations;
-            NumOfQuestions = category.NumOfQuestions;
-            HasSubCategories = category.HasSubCategories;
-            if (category.Questions == null)
+
+            var(partitionKey, id, parentCategory, title, header, level, kind,
+                hasSubCategories, hasMoreQuestions, variations, questions) = category;
+            Id = id;
+            PartitionKey = partitionKey!;
+            Title = title;
+            Header = header;   
+            Kind = kind;
+            ParentCategory = parentCategory;
+            Level = level;
+            Variations = variations;
+            NumOfQuestions = questions == null ? 0 : questions.Count;
+            HasSubCategories = hasSubCategories;
+            if (questions == null)
             {
                 Questions = null;
                 HasMoreQuestions = false;
@@ -72,8 +79,8 @@ namespace NewKnowledgeAPI.Q.Categories.Model
                 //IList<QuestionDto> questions = new List<QuestionDto>();
                 //foreach (var question in category.questions)
                 //    questions.Add(new QuestionDto(question));
-                Questions = Questions2Dto(category.Questions!);
-                HasMoreQuestions = category.HasMoreQuestions;
+                Questions = Questions2Dto(questions!);
+                HasMoreQuestions = hasMoreQuestions;
             }
         }
 

@@ -18,7 +18,6 @@ namespace NewKnowledgeAPI.Q.Categories
         private readonly IConfiguration Configuration;
         DbService dbService { get; set; }
 
-
         public CategoryController(IConfiguration configuration)
         {
             dbService = new DbService(configuration);

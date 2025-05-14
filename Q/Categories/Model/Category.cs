@@ -12,6 +12,8 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
         public string Title { get; set; }
+        public string Header { get; set; }
+
         public int Kind { get; set; }
         public string? ParentCategory { get; set; }
         public int Level { get; set; }
@@ -37,16 +39,18 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public Category(CategoryData categoryData)
             : base(new WhoWhen("Admin"), null, null)
         {
+            var (partitionKey, id,title,header,parentCategory,kind,level,variations,categories, questions) = categoryData;
             Type = "category";
-            Id = categoryData.Id;
-            PartitionKey = categoryData.PartitionKey ?? categoryData.Id;
-            Title = categoryData.Title;
-            Kind = categoryData.Kind;
-            ParentCategory = categoryData.ParentCategory;
-            Level = (int)categoryData.Level!;
-            Variations = categoryData.Variations ?? null;
-            NumOfQuestions = categoryData.Questions == null ? 0 : categoryData.Questions.Count;
-            HasSubCategories = categoryData.Categories != null && categoryData.Categories.Count > 0;
+            Id = id;
+            PartitionKey = partitionKey ?? categoryData.Id;
+            Title = title;
+            Header = header ?? ""; 
+            Kind = kind;
+            ParentCategory = parentCategory;
+            Level = (int)level!;
+            Variations = variations ?? null;
+            NumOfQuestions = questions == null ? 0 : questions.Count;
+            HasSubCategories = categories != null && categories.Count > 0;
             Questions = null;
         }
 
@@ -74,9 +78,12 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             out string partitionKey,
             out string id, 
             out string parentCategory, 
-            out string title, 
+            out string title,
+            out string header,
             out int level, 
-            out int kind, 
+            out int kind,
+            out bool hasSubCategories,
+            out bool? hasMoreQuestions,
             out List<string>? variations,
             out List<Question>? questions)
         {
@@ -84,8 +91,11 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             id = Id;
             parentCategory = ParentCategory;
             title = Title;
+            header = Header;
             kind = Kind;
             level = Level;
+            hasSubCategories = HasSubCategories;
+            hasMoreQuestions = HasMoreQuestions;
             variations = Variations;
             questions = Questions;
         }
