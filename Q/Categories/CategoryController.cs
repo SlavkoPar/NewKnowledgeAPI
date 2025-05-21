@@ -10,7 +10,7 @@ namespace NewKnowledgeAPI.Q.Categories
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     //[RequiredScope(RequiredScopesConfigurationKey = "AzureAd:Scopes")]
 
     public class CategoryController : ControllerBase

@@ -14,6 +14,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public string? PartitionKey { get; set; }
 
         public string Title { get; set; }
+        public string? Link { get; set; }
         public string Header { get; set; }
 
         public int Kind { get; set; }
@@ -40,6 +41,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Id = id;
             PartitionKey = partitionKey;
             Title = "deca";
+            Link = null;
             Header = "peca";
             Kind = 1;
             Level = 1;
@@ -57,17 +59,18 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             : base(category.Created, category.Modified)
         {
 
-            var(partitionKey, id, parentCategory, title, header, level, kind,
+            var(partitionKey, id, parentCategory, title, link, header, level, kind,
                 hasSubCategories, hasMoreQuestions, variations, questions) = category;
             Id = id;
             PartitionKey = partitionKey!;
             Title = title;
+            Link = link;
             Header = header;   
             Kind = kind;
             ParentCategory = parentCategory;
             Level = level;
             Variations = variations;
-            NumOfQuestions = questions == null ? 0 : questions.Count;
+            NumOfQuestions = category.NumOfQuestions; //questions == null ? 0 : questions.Count;
             HasSubCategories = hasSubCategories;
             if (questions == null)
             {
@@ -112,12 +115,15 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             id = Id;
         }
 
-        public void Deconstruct(out string partitionKey, out string id, out string parentCategory, out string title, out int level, out int kind, out List<string>? variations)
+        public void Deconstruct(out string partitionKey, out string id, out string parentCategory, 
+                out string title, out string? link, 
+                out int level, out int kind, out List<string>? variations)
         {
             partitionKey = PartitionKey;
             id = Id;
             parentCategory = ParentCategory;
             title = Title;
+            link = Link;
             kind = Kind;
             level = Level;
             variations = Variations;

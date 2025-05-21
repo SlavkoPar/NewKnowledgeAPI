@@ -8,6 +8,7 @@ using NewKnowledgeAPI.A.Groups.Model;
 using NewKnowledgeAPI.A.Answers.Model;
 using NewKnowledgeAPI.A.Answers;
 using NewKnowledgeAPI.Q.Questions.Model;
+using System.Diagnostics;
 
 namespace NewKnowledgeAPI.A.Groups
 {
@@ -54,7 +55,7 @@ namespace NewKnowledgeAPI.A.Groups
                     subGroups.Add(group);
                 }
             }
-            Console.WriteLine(JsonConvert.SerializeObject(subGroups));
+            //Console.WriteLine(JsonConvert.SerializeObject(subGroups));
             return subGroups;
         }
 
@@ -123,9 +124,9 @@ namespace NewKnowledgeAPI.A.Groups
             }
         }
 
-        public async Task<HttpStatusCode> CheckDuplicate(string title) //AnswerData answerData)
+        public async Task<HttpStatusCode> CheckDuplicate(string title, string id) //AnswerData answerData)
         {
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'group' AND c.Title = '{title}'";
+            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'group' AND (c.Title = '{title.Replace("\'", "\\'")}' OR c.id = '{id}')";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Answer> queryResultSetIterator =
                 _container!.GetItemQueryIterator<Answer>(queryDefinition);
@@ -191,7 +192,7 @@ namespace NewKnowledgeAPI.A.Groups
 
         public async Task<GroupEx> AddNewGroup(Group group)
         {
-            var (PartitionKey, Id, Title, ParentGroup, Kind, Level, Variations, Answers) = group;
+            var (PartitionKey, Id, ParentGroup, Title, Level, Kind, Variations, Answers) = group;
             var myContainer = await container();
             string msg = string.Empty;
             try
@@ -210,9 +211,9 @@ namespace NewKnowledgeAPI.A.Groups
                 try
                 {
                     // Check if the title already exists
-                    HttpStatusCode statusCode = await CheckDuplicate(Title);
-                    msg = $"Group in database with Title: {Title} already exists";
-                    Console.WriteLine(msg);
+                    HttpStatusCode statusCode = await CheckDuplicate(Title, Id);
+                    msg = $"Group in database with Id: {Id} or Title: {Title} already exists";
+                    Debug.WriteLine(msg);
                 }
                 catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -230,7 +231,7 @@ namespace NewKnowledgeAPI.A.Groups
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this reans.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
                 msg = ex.Message;
             }
             return new GroupEx(null, msg);

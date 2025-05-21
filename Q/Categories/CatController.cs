@@ -14,7 +14,7 @@ namespace NewKnowledgeAPI.Q.Categories
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class CatController : ControllerBase
     {
         private readonly IConfiguration Configuration;
@@ -38,15 +38,15 @@ namespace NewKnowledgeAPI.Q.Categories
                 var categoryService = new CategoryService(dbService);
                 CategoryKey categoryKey = new(partitionKey, Id);
                 CategoryListEx categoryListEx = await categoryService.GetCatsUpTheTree(categoryKey);
-                Console.WriteLine(JsonConvert.SerializeObject(categoryListEx));
-                CategoryDtoListEx categoryDtoListEx = new(categoryListEx);
+                //Console.WriteLine(JsonConvert.SerializeObject(categoryListEx));
+                var categoryDtoListEx = new CategoryDtoListEx(categoryListEx);
                 return Ok(categoryDtoListEx);
             }
             catch (Exception ex)
             {
                 string msg = ex.Message;
                 Console.WriteLine(msg);
-                return BadRequest(new CategoryDtoListEx( new CategoryListEx(null, msg) ));
+                return BadRequest(new CategoryDtoListEx(new CategoryListEx(null, msg)));
             }
         }
 

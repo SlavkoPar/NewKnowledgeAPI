@@ -6,6 +6,7 @@ using NewKnowledgeAPI.Q.Categories.Model;
 using NewKnowledgeAPI.Q.Questions;
 using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
+using System.Diagnostics;
 using System.Net;
 
 namespace NewKnowledgeAPI.Q.Categories
@@ -44,16 +45,16 @@ namespace NewKnowledgeAPI.Q.Categories
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Category> queryResultSetIterator = myContainer.GetItemQueryIterator<Category>(queryDefinition);
             //List<CategoryDto> subCategories = new List<CategoryDto>();
-            List<Category> subCategories = [];
+            List<Category> allCategories = [];
             while (queryResultSetIterator.HasMoreResults)
             {
                 FeedResponse<Category> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                 foreach (Category category in currentResultSet)
                 {
-                    subCategories.Add(category);
+                    allCategories.Add(category);
                 }
             }
-            return subCategories;
+            return allCategories;
         }
 
 
@@ -97,12 +98,12 @@ namespace NewKnowledgeAPI.Q.Categories
                 // Read the item to see if it exists.  
                 //ItemResponse<Category> aResponse =
                 Category category = await myContainer!.ReadItemAsync<Category>(Id, new PartitionKey(PartitionKey));
-                Console.WriteLine(JsonConvert.SerializeObject(category));
+                //Console.WriteLine(JsonConvert.SerializeObject(category));
 
-                if (hidrate && category != null)
+                if (category != null && hidrate && pageSize > 0)
                 {
                     // hidrate collections except questions, like  category.x = hidrate;  
-                    if (pageSize > 0 && category.NumOfQuestions > 0)
+                    if (category.NumOfQuestions > 0)
                     {
                         var questionService = new QuestionService(Db);
                         QuestionsMore questionsMore = await questionService.GetQuestions(Id, 0, pageSize, includeQuestionId);
@@ -115,14 +116,14 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
                 return new CategoryEx(null, ex.Message);
             }
         }
 
-        public async Task<HttpStatusCode> CheckDuplicate(string title) //QuestionData questionData)
+        public async Task<HttpStatusCode> CheckDuplicate(string title, string id) //QuestionData questionData)
         {
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND c.Title = '{title}'";
+            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND (c.Title = '{title.Replace("\'", "\\'")}' OR c.Id = '{id}')";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Question> queryResultSetIterator =
                 _container!.GetItemQueryIterator<Question>(queryDefinition);
@@ -131,7 +132,7 @@ namespace NewKnowledgeAPI.Q.Categories
                 FeedResponse<Question> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                 if (currentResultSet.Count == 0)
                 {
-                    throw new CosmosException("Category Title already exists", HttpStatusCode.NotFound, 0, "0", 0);
+                    throw new CosmosException("", HttpStatusCode.NotFound, 0, "0", 0);
                 }
             }
             return HttpStatusCode.OK;
@@ -139,8 +140,7 @@ namespace NewKnowledgeAPI.Q.Categories
 
         public async Task AddCategory(CategoryData categoryData)
         {
-            //var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Categories, Questions) = categoryData;
-            var (partitionKey, id, title, header, parentCategory, kind, level, variations, categories, questions) = categoryData;
+            var (partitionKey, id, title, link, header, parentCategory, kind, level, variations, categories, questions) = categoryData;
 
             //Console.WriteLine(JsonConvert.SerializeObject(categoryData));
             var myContainer = await container();
@@ -153,7 +153,7 @@ namespace NewKnowledgeAPI.Q.Categories
 
             try
             {
-                Category c = new(categoryData);
+                var c = new Category(categoryData);
                 CategoryEx categoryEx = await AddNewCategory(c);
                 if (categoryEx.category != null)
                 {
@@ -184,14 +184,14 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
         }
 
         public async Task<CategoryEx> AddNewCategory(Category category)
         {
             //var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Questions) = category;
-            var (partitionKey, id, parentCategory, title, header, level, kind,
+            var (partitionKey, id, parentCategory, title, link, header, level, kind,
                 hasSubCategories, hasMoreQuestion, variations, questions) = category;
 
             var myContainer = await container();
@@ -205,16 +205,16 @@ namespace NewKnowledgeAPI.Q.Categories
                         new PartitionKey(partitionKey)
                     );
                 msg = $"Category in database with Id: {id} already exists"; //, aResponse.Resource.Id
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 try
                 {
                     // Check if the title already exists
-                    HttpStatusCode statusCode = await CheckDuplicate(title);
-                    msg = $"Category in database with Title: {title} already exists";
-                    Console.WriteLine(msg);
+                    HttpStatusCode statusCode = await CheckDuplicate(title, id);
+                    msg = $"Category in database with Id: {id} or Title: {title} already exists";
+                    Debug.WriteLine(msg);
                 }
                 catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -232,7 +232,7 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
                 msg = ex.Message;
             }
             return new CategoryEx(null, msg);
@@ -260,7 +260,7 @@ namespace NewKnowledgeAPI.Q.Categories
             string msg = string.Empty;
             try
             {
-                var (PartitionKey, Id, ParentCategory, Title, Level, Kind, Variations) = categoryDto;
+                var (PartitionKey, Id, ParentCategory, Title, Link, Level, Kind, Variations) = categoryDto;
                 // Read the item to see if it exists.  
                 ItemResponse<Category> aResponse =
                     await myContainer!.ReadItemAsync<Category>(
@@ -270,6 +270,7 @@ namespace NewKnowledgeAPI.Q.Categories
                 Category category = aResponse.Resource;
                 // Update the item fields
                 category.Title = Title;
+                category.Link = Link;
                 category.Kind = Kind;
                 category.Variations = Variations;
                 category.ParentCategory = ParentCategory;
@@ -287,13 +288,13 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 msg = $"Category Id: {categoryDto.Id} NotFound in database."; //, aResponse.RequestCharge);
-                Console.WriteLine(msg); //, aResponse.RequestCharge);
+                Debug.WriteLine(msg); //, aResponse.RequestCharge);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 msg = ex.Message;
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return new CategoryEx(null, msg);
         }
@@ -324,19 +325,19 @@ namespace NewKnowledgeAPI.Q.Categories
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                Console.WriteLine("Category item {0}/{1} NotFound in database.\n", questionDto.PartitionKey, questionDto.Id); //, aResponse.RequestCharge);
+                Debug.WriteLine("Category item {0}/{1} NotFound in database.\n", questionDto.PartitionKey, questionDto.Id); //, aResponse.RequestCharge);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return null;
         }
 
         public async Task<Category> UpdateHasSubCategories(CategoryDto categoryDto)
         {
-            var (PartitionKey, Id, ParentCategory, Title, Level, Kind, Variations) = categoryDto;
+            var (PartitionKey, Id, ParentCategory, Title, Link, Level, Kind, Variations) = categoryDto;
             var myContainer = await container();
             try
             {
@@ -364,12 +365,12 @@ namespace NewKnowledgeAPI.Q.Categories
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                Console.WriteLine("Category item {0}/{1} NotFound in database.\n", categoryDto.PartitionKey, categoryDto.Id); //, aResponse.RequestCharge);
+                Debug.WriteLine("Category item {0}/{1} NotFound in database.\n", categoryDto.PartitionKey, categoryDto.Id); //, aResponse.RequestCharge);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return null;
         }
@@ -406,12 +407,12 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 msg = $"Category {partitionKey}/{id} NotFound in database.";
-                Console.WriteLine(msg); //, aResponse.RequestCharge);
+                Debug.WriteLine(msg); //, aResponse.RequestCharge);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return new CategoryEx(null, msg);
         }
@@ -444,12 +445,12 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 msg =$"Category {categoryDto.Id} NotFound in database."; //, aResponse.RequestCharge);
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
                 msg = ex.Message;
             }
             return new CategoryEx(null, msg);
@@ -459,21 +460,20 @@ namespace NewKnowledgeAPI.Q.Categories
         {
             string message = string.Empty;
             try {
-                Category? category;
-                string? parentCategory;
+                string? parentCategory = null;
                 List<Category> list = [];
                 do
                 {
                     CategoryEx categoryEx = await GetCategory(categoryKey, false, 0, null);
-                    Console.WriteLine("---------------------------------------------------");
-                    Console.WriteLine(JsonConvert.SerializeObject(categoryEx)); 
-                    category = categoryEx.category;
+                    // Console.WriteLine("---------------------------------------------------");
+                    // Console.WriteLine(JsonConvert.SerializeObject(categoryEx)); 
+                    var (category, msg) = categoryEx;
                     if (category != null)
                     {
                         list.Add(category);
-                        parentCategory = category.ParentCategory;
+                        parentCategory = category.ParentCategory!;
                         // partitionKey is the same as Id
-                        categoryKey = new CategoryKey(category.ParentCategory, category.ParentCategory);
+                        categoryKey = new CategoryKey(parentCategory, parentCategory);
                     }
                     else
                     {
@@ -486,6 +486,7 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (Exception ex)
             {
                 message = ex.Message;
+                Debug.WriteLine(message);
             }
             return new CategoryListEx(null, message);
         }

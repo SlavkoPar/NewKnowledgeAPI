@@ -12,7 +12,7 @@
             {
                 foreach (var category in categoryList)
                 {
-                    CategoryDto categoryDto = new CategoryDto(category);
+                    var categoryDto = new CategoryDto(category);
                     categoryDtoList.Add(categoryDto);
                 }
             }

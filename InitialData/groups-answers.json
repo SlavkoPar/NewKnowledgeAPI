@@ -1,33 +1,104 @@
 {
   "Groups": [
     {
-      "Id": "DEMO",
-      "Title": "Demo",
+      "Id": "MTS",
+      "Title": "Mts",
       "Kind": 2,
       "Groups": [
         {
-          "Id": "DALJINSKI",
-          "Title": "Daljinski",
+          "Id": "KUPOVINA",
+          "Title": "Kupovina",
           "Kind": 2,
-          "Answers": [
+          "Groups": [
             {
-              "Title": "Promenite baterije na daljinskom",
-              "Id": "4352294151"
+              "Id": "PAKETI",
+              "Title": "Paketa i usluga",
+              "Kind": 2
             },
             {
-              "Title": "Restartujte ruter i TV, as the Papa pig does",
-              "Id": "4352294152"
-            },
-            {
-              "Title": "Idite u našu najbližu poslovnicu i oni će Vam zameniti daljinski",
-              "Id": "4352294153"
-            },
-            {
-              "Title": "Lista poslovnica (ne ekspozitura)",
-              "Link": "https://sbb.rs/podrska/kontakt/prodajna-mesta",
-              "Id": "4352294154"
+              "Id": "TELEFONI_TABLETI",
+              "Title": "Telefona i dodatne opreme",
+              "Kind": 2,
+              "Groups": [
+                {
+                  "Id": "MOBILNI",
+                  "Title": "Mobilni telefoni, tableti, modemi, trekeri",
+                  "Kind": 2,
+                  "Groups": [
+                    {
+                      "Id": "TELEFONI",
+                      "Title": "Telefoni",
+                      "Kind": 2
+                    },
+                    {
+                      "Id": "TABLETI",
+                      "Title": "Tableti i modemi",
+                      "Kind": 2
+                    },
+                    {
+                      "Id": "SATICI",
+                      "Title": "Dečiji satići",
+                      "Kind": 2
+                    },
+                    {
+                      "Id": "TREKERI",
+                      "Title": "Trekeri",
+                      "Kind": 2
+                    }
+                  ]
+                },
+                {
+                  "Id": "TELEVISIONS",
+                  "Title": "Televisions, remote controllers, smart watches, headphones, chargers",
+                  "Kind": 2,
+                  "Answers": [
+                    {
+                      "Title": "Change the bateries",
+                      "Id": "7772294151"
+                    },
+                    {
+                      "Title": "Restart ruter and TV, as the Pepa pig does",
+                      "Id": "7772294152"
+                    },
+                    {
+                      "Title": "Visit our closest branch office, they will change remote controller",
+                      "Id": "7772294153"
+                    },
+                    {
+                      "Title": "Branch offices (not exposition)",
+                      "Link": "https://sbb.rs/podrska/kontakt/prodajna-mesta",
+                      "Id": "7772294154"
+                    }
+                  ]
+                },
+                {
+                  "Id": "PLAYSTATION",
+                  "Title": "Playstation, other equipment",
+                  "Kind": 2
+                },
+                {
+                  "Id": "SMARTHOME",
+                  "Title": "Smart home - Sijalice, utičnice, kamere, senzori, releji",
+                  "Kind": 2
+                }
+              ]
             }
           ]
+        },
+        {
+          "Id": "PROBLEMI",
+          "Title": "Problemi i prijava smetnji",
+          "Kind": 2
+        },
+        {
+          "Id": "RAČUNI",
+          "Title": "Računi",
+          "Kind": 2
+        },
+        {
+          "Id": "ROMING",
+          "Title": "Roming",
+          "Kind": 2
         }
       ]
     },
@@ -82,10 +153,7 @@
           "Title": "Podesi zvuk na EON smart box-u"
         },
         {
-          "Title": "Change the bateries"
-        },
-        {
-          "Title": "Got to branch office and you will get a new remote controller"
+          "Title": "Go to branch office and you will get a new remote controller"
         },
 
         {
@@ -107,7 +175,7 @@
           "Title": "TV unazad koristiš nekako na EON smart box-u"
         },
         {
-          "Title": "Roditeljskua kontrol možeš ovako preko menija ..."
+          "Title": "Roditeljska kontrola možeš ovako preko menija ..."
         },
         {
           "Title": "Blokiram kanal, snađi se nekako"
@@ -116,7 +184,7 @@
           "Title": "Use parenthal control, cry a little"
         },
         {
-          "Title": "Change name and passwerdof your WiFi network Cisco EPC"
+          "Title": "Change name and passwerd of your WiFi network Cisco EPC"
         },
         {
           "Title": "Jump through the window"

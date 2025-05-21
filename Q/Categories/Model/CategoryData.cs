@@ -11,6 +11,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public string Id { get; set; }
         public string? PartitionKey { get; set; }
         public string Title { get; set; }
+        public string? Link { get; set; }
         public string? Header { get; set; }
         public int Kind { get; set; }
         public int? Level { get; set; }
@@ -22,6 +23,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             out string? partitionKey,
             out string id,
             out string title,
+            out string? link,
             out string? header,
             out string? parentCategory,
             out int kind,
@@ -33,6 +35,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
                 partitionKey = PartitionKey;
                 id = Id;
                 title = Title;
+                link = Link;
                 header = Header;
                 parentCategory = ParentCategory;
                 kind = Kind;

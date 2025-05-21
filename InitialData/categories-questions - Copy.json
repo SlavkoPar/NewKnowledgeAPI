@@ -6,142 +6,142 @@
       "Kind": 2,
       "Categories": [
         {
-          "Id": "SALE",
-          "Title": "Sale",
+          "Id": "KUPOVINA",
+          "Title": "Kupovina",
           "Header": "Zainteresovani ste za kupovinu",
           "Kind": 2,
           "Categories": [
             {
-              "Id": "PACKAGES",
-              "Title": "Packages and services",
+              "Id": "PAKETI",
+              "Title": "Paketa i usluga",
               "Header": "h2",
               "Kind": 2
             },
             {
               "Id": "TEL_TV",
-              "Title": "Phones, TV, additional equipment",
+              "Title": "Telefoni, TV, dodatne oprema",
               "Header": "h3",
               "Kind": 2,
               "Categories": [
                 {
-                  "Id": "MOBILE",
-                  "Title": "Mobile phones, tablets, modems, trackers",
+                  "Id": "MOBILNI",
+                  "Title": "Mobilni telefoni, tableti, modemi, trekeri",
                   "Header": "Izaberite tip uređaja za koji ste zainteresovani",
                   "Kind": 2,
                   "Categories": [
                     {
-                      "Id": "PHONES",
-                      "Title": "Phones",
-                      "Link": "/categories/PHONES_null",
+                      "Id": "TELEFONI",
+                      "Title": "Telefoni",
+                      "Link": "/categories/TELEFONI_null",
                       "Header": "h4",
                       "Kind": 2
                     },
                     {
-                      "Id": "TABLETS",
-                      "Title": "Tablets and modems",
-                      "Link": "/categories/TABLETS_null",
+                      "Id": "TABLETI",
+                      "Title": "Tableti i modemi",
+                      "Link": "/categories/TABLETI_null",
                       "Header": "h5",
                       "Kind": 2
                     },
                     {
-                      "Id": "CHILDRENWATCHES",
-                      "Title": "Children watches",
-                      "Link": "/categories/CHILDRENWATCHES_null",
+                      "Id": "SATICI",
+                      "Title": "Dečiji satići",
+                      "Link": "/categories/SATICI_null",
                       "Header": "h6",
                       "Kind": 2
                     },
                     {
-                      "Id": "TRACKERS",
-                      "Title": "Trackers",
-                      "Link": "/categories/TRACKERS_null",
+                      "Id": "TREKERI",
+                      "Title": "Trekeri",
+                      "Link": "/categories/TREKERI_null",
                       "Header": "h7",
                       "Kind": 2
                     }
                   ]
                 },
                 {
-                  "Id": "TELEVISIONS",
-                  "Title": "Televisions, remote controllers, smart watches, headphones, chargers",
+                  "Id": "TELEVIZORI",
+                  "Title": "Televizori, daljinski, pametni satovi, slušalice, punjači",
                   "Header": "h8",
                   "Kind": 2,
                   "Categories": [
                     {
                       "Id": "TV",
-                      "Title": "Televisions",
+                      "Title": "Televizori",
                       "Link": "/categories/TV_null",
                       "Header": "Izaberite tip uređaja",
                       "Kind": 2
                     },
                     {
-                      "Id": "SMARTWATCHES",
-                      "Title": "Smart watches",
-                      "Link": "/categories/SMARTWATCHES_null",
+                      "Id": "SATOVI",
+                      "Title": "Pametni satovi i narukvice",
+                      "Link": "/categories/SATOVI_null",
                       "Header": "h9",
                       "Kind": 2
                     },
                     {
-                      "Id": "HEADPHONES",
-                      "Title": "Head Phones",
-                      "Link": "/categories/HEADPHONES_null",
+                      "Id": "SLUSALICE",
+                      "Title": "Slušalice",
+                      "Link": "/categories/SLUSALICE_null",
                       "Header": "",
                       "Kind": 2
                     },
                     {
-                      "Id": "CHARGERS",
-                      "Title": "Chargers",
-                      "Link": "/categories/CHARGERS_null",
+                      "Id": "PUNJACI",
+                      "Title": "Punjači",
+                      "Link": "/categories/PUNJACI_null",
                       "Header": "",
                       "Kind": 2
                     },
                     {
-                      "Id": "REMOTECTRLS",
-                      "Title": "Remote controllers",
-                      "Link": "/categories/REMOTECTRLS_null",
+                      "Id": "DALJINSKI",
+                      "Title": "Daljinski",
+                      "Link": "/categories/DALJINSKI_null",
                       "Header": "",
                       "Kind": 2,
                       "Questions": [
                         {
-                          "Title": "Remote controller doesn't work",
+                          "Title": "Daljinski ne radi",
                           "Id": "7770111111",
                           "AssignedAnswers": [
                             {
                               "AnswerKey": {
-                                "partitionKey": "TELEVISIONS",
+                                "partitionKey": "TELEVIZORI",
                                 "id": "7772294151"
                               }
                             },
                             {
                               "AnswerKey": {
-                                "partitionKey": "TELEVISIONS",
+                                "partitionKey": "TELEVIZORI",
                                 "id": "7772294152"
                               }
                             },
                             {
                               "AnswerKey": {
-                                "partitionKey": "TELEVISIONS",
+                                "partitionKey": "TELEVIZORI",
                                 "id": "7772294153"
                               }
                             },
                             {
                               "AnswerKey": {
-                                "partitionKey": "TELEVISIONS",
+                                "partitionKey": "TELEVIZORI",
                                 "id": "7772294154"
                               }
                             }
                           ],
                           "RelatedFilters": [
                             {
-                              "Filter": "Branch offices"
+                              "Filter": "Lista poslovnica"
                             }
                           ]
                         },
                         {
-                          "Title": "Branch offices",
+                          "Title": "Lista poslovnica",
                           "Id": "7770222222",
                           "AssignedAnswers": [
                             {
                               "AnswerKey": {
-                                "partitionKey": "TELEVISIONS",
+                                "partitionKey": "TELEVIZORI",
                                 "id": "7772294154"
                               }
                             }
@@ -168,14 +168,14 @@
           ]
         },
         {
-          "Id": "PROBLEMS",
-          "Title": "Problems and report of failures",
+          "Id": "PROBLEMI",
+          "Title": "Problemi i prijava smetnji",
           "Header": "",
           "Kind": 2
         },
         {
-          "Id": "ACCOUNT",
-          "Title": "Accounts",
+          "Id": "RACUNI",
+          "Title": "Računi",
           "Header": "",
           "Kind": 2
         },
@@ -244,13 +244,13 @@
               "Kind": 3,
               "Questions": [
                 {
-                  "Title": "Remote controller of EON smart box-a, doesn't work"
+                  "Title": "Remote controller of EON smart box-a, doesn\\'t work"
                 },
                 { "Title": "Podešavanje pozicije ekrana na EON smart box-ukomande" },
                 { "Title": "Podešavanje i promena jezika titla na EON smart box-u" },
                 { "Title": "Podešavanje zvuka na EON smart box-u" },
                 { "Title": "Pokvario mi se D3mini daljinski" },
-                { "Title": "Changed bateries, but it still doesn't work" },
+                { "Title": "Changed bateries, but it still doesn\\'t work" },
                 { "Title": "Dajte mi listu poslovnica (ne standova)" },
                 {
                   "Title": "Nothing works and no one knows why"
@@ -283,7 +283,7 @@
               "Id": "TV-UNAZAD",
               "Title": "TV Unazad",
               "Questions": [
-                { "Title": "Kako da koristim TV unazad?" }
+                { "Title": "Kako da koristim TV unazad na EON smart box-u?" }
               ]
             }
           ]

@@ -14,7 +14,6 @@ namespace NewKnowledgeAPI.A.Groups.Model
 
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
-
         public string Title { get; set; }
         public int Kind { get; set; }
         public string? ParentGroup { get; set; }
@@ -22,6 +21,8 @@ namespace NewKnowledgeAPI.A.Groups.Model
         public List<string>? Variations { get; set; }
         public int NumOfAnswers { get; set; }
         public bool HasSubGroups { get; set; }
+
+        [JsonProperty(PropertyName = "Answers", NullValueHandling = NullValueHandling.Ignore)]
         public List<Answer>? Answers { get; set; }
 
         [JsonProperty(PropertyName = "HasMoreAnswers", NullValueHandling = NullValueHandling.Ignore)]

@@ -9,6 +9,7 @@ using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
 using Microsoft.AspNetCore.Http.HttpResults;
 using NewKnowledgeAPI.A.Answers.Model;
+using System.Diagnostics;
 
 
 namespace NewKnowledgeAPI.Q.Questions
@@ -39,9 +40,8 @@ namespace NewKnowledgeAPI.Q.Questions
                  
         public async Task<HttpStatusCode> CheckDuplicate(string? Title, string? Id = null)
         {
-
             var sqlQuery = Title != null
-                ? $"SELECT * FROM c WHERE c.Type = 'question' AND c.Title = '{Title}' AND IS_NULL(c.Archived)"
+                ? $"SELECT * FROM c WHERE c.Type = 'question' AND c.Title = '{Title.Replace("\'", "\\'")}' AND IS_NULL(c.Archived)"
                 : $"SELECT * FROM c WHERE c.Type = 'question' AND c.Id = '{Id}' AND IS_NULL(c.Archived)";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Question> queryResultSetIterator =
@@ -65,11 +65,11 @@ namespace NewKnowledgeAPI.Q.Questions
             try
             {
                 var question = new Question(questionData);
-                Console.WriteLine("----->>>>> " + JsonConvert.SerializeObject(question));
+                //Console.WriteLine("----->>>>> " + JsonConvert.SerializeObject(question));
                 // Read the item to see if it exists.  
                 await CheckDuplicate(questionData.Title);
                 msg = $":::::: Item in database with Title: {questionData.Title} already exists";
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
@@ -81,7 +81,7 @@ namespace NewKnowledgeAPI.Q.Questions
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 msg = ex.Message;
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             return new QuestionEx(null, msg);
         }
@@ -102,7 +102,7 @@ namespace NewKnowledgeAPI.Q.Questions
                         new PartitionKey(partitionKey)
                     );
                 msg = $"Question in database with id: {id} already exists\n";
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
@@ -111,7 +111,7 @@ namespace NewKnowledgeAPI.Q.Questions
                     // Check if the title already exists
                     HttpStatusCode statusCode = await CheckDuplicate(title);
                     msg = $"Question in database with Title: {title} already exists";
-                    Console.WriteLine(msg);
+                    Debug.WriteLine(msg);
                 }
                 catch (CosmosException exception) when (exception.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -121,14 +121,14 @@ namespace NewKnowledgeAPI.Q.Questions
                             new PartitionKey(partitionKey)
                         );
                     // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                    Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
+                    // Console.WriteLine("Created item in database with id: {0} Operation consumed {1} RUs.\n", aResponse.Resource.Id, aResponse.RequestCharge);
                     return new QuestionEx(aResponse.Resource, "");
                 }
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
                 msg = ex.Message;
             }
             return new QuestionEx(null, msg);
@@ -147,7 +147,7 @@ namespace NewKnowledgeAPI.Q.Questions
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
                 return new QuestionEx(null, ex.Message);
             }
         }
@@ -171,13 +171,13 @@ namespace NewKnowledgeAPI.Q.Questions
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 msg = "NotFound";
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
                 msg = ex.Message;
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
             }
             //Console.WriteLine(JsonConvert.SerializeObject(question));
             Console.WriteLine("*****************************");
@@ -234,13 +234,13 @@ namespace NewKnowledgeAPI.Q.Questions
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 var msg = $"Question Id: \"{Id}\" Not Found in database.";
-                Console.WriteLine(msg); 
+                Debug.WriteLine(msg); 
                 return new QuestionEx(null, msg);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return new QuestionEx(null, "Server Problem Update");
         }
@@ -272,7 +272,7 @@ namespace NewKnowledgeAPI.Q.Questions
                         HttpStatusCode statusCode = await CheckDuplicate(Title);
                         doUpdate = false;
                         var msg = $"Question with Title: \"{Title}\" already exists in database.";
-                        Console.WriteLine(msg);
+                        Debug.WriteLine(msg);
                         return new QuestionEx(null, msg);
                     }
                     catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
@@ -295,13 +295,13 @@ namespace NewKnowledgeAPI.Q.Questions
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
                 var msg = $"Question Id: \"{Id}\" Not Found in database.";
-                Console.WriteLine(msg);
+                Debug.WriteLine(msg);
                 return new QuestionEx(null, msg);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return new QuestionEx(null, "Server Problem Update");
         }
@@ -340,13 +340,13 @@ namespace NewKnowledgeAPI.Q.Questions
                 {
                     msg = $"Question Title: {questionDto.Title} aleready exists in database.";
                 }
-                Console.WriteLine(msg); //, aResponse.RequestCharge);
+                Debug.WriteLine(msg); //, aResponse.RequestCharge);
                 return new QuestionEx(null, msg);
             }
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return new QuestionEx(null, "Server Problem Delete");
         }
@@ -395,7 +395,7 @@ namespace NewKnowledgeAPI.Q.Questions
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return new QuestionsMore([], false);
         }
@@ -445,7 +445,7 @@ namespace NewKnowledgeAPI.Q.Questions
             catch (Exception ex)
             {
                 // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Console.WriteLine(ex.Message);
+                Debug.WriteLine(ex.Message);
             }
             return [];
         }

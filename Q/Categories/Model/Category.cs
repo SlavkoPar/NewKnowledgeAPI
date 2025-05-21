@@ -12,6 +12,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         [JsonProperty(PropertyName = "partitionKey")]
         public string PartitionKey { get; set; }
         public string Title { get; set; }
+        public string? Link { get; set; }
         public string Header { get; set; }
 
         public int Kind { get; set; }
@@ -20,7 +21,11 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public List<string>? Variations { get; set; }
         public int NumOfQuestions { get; set; }
         public bool HasSubCategories { get; set; }
+
+        [JsonProperty(PropertyName = "Questions", NullValueHandling = NullValueHandling.Ignore)]
         public List<Question>? Questions { get; set; }
+
+        [JsonProperty(PropertyName = "HasMoreQuestions", NullValueHandling = NullValueHandling.Ignore)]
         public bool? HasMoreQuestions { get; set; }
 
         public Category()
@@ -39,11 +44,13 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public Category(CategoryData categoryData)
             : base(new WhoWhen("Admin"), null, null)
         {
-            var (partitionKey, id,title,header,parentCategory,kind,level,variations,categories, questions) = categoryData;
+            var (partitionKey, id, title, link, header, parentCategory, kind, level, variations, categories, questions) = categoryData;
+
             Type = "category";
             Id = id;
             PartitionKey = partitionKey ?? categoryData.Id;
             Title = title;
+            Link = link;
             Header = header ?? ""; 
             Kind = kind;
             ParentCategory = parentCategory;
@@ -61,6 +68,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Id = categoryDto.Id;
             PartitionKey = categoryDto.PartitionKey ?? categoryDto.Id;
             Title = categoryDto.Title;
+            Link = categoryDto.Link;
             Kind = categoryDto.Kind;
             ParentCategory = categoryDto.ParentCategory;
             Level = categoryDto.Level;
@@ -79,6 +87,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             out string id, 
             out string parentCategory, 
             out string title,
+            out string? link,
             out string header,
             out int level, 
             out int kind,
@@ -91,6 +100,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             id = Id;
             parentCategory = ParentCategory;
             title = Title;
+            link = Link;
             header = Header;
             kind = Kind;
             level = Level;
