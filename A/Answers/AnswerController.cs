@@ -3,7 +3,6 @@ using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
 using System.Configuration;
 using Newtonsoft.Json;
-using Microsoft.Azure.Cosmos.Serialization.HybridRow.Schemas;
 using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
 using NewKnowledgeAPI.A.Groups.Model;
@@ -17,7 +16,7 @@ namespace NewKnowledgeAPI.A.Answers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
 
     public class AnswerController : ControllerBase
     {
@@ -116,7 +115,6 @@ namespace NewKnowledgeAPI.A.Answers
             {
                 Console.WriteLine("*********=====>>>>>> answerDto");
                 Console.WriteLine(JsonConvert.SerializeObject(answerDto));
-
                 var groupService = new GroupService(dbService);
                 var answerService = new AnswerService(dbService);
 

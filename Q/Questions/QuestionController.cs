@@ -19,8 +19,7 @@ namespace NewKnowledgeAPI.Q.Questions
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
-
+    //[Authorize]
     public class QuestionController : ControllerBase
     {
         private readonly IConfiguration Configuration;
@@ -73,6 +72,7 @@ namespace NewKnowledgeAPI.Q.Questions
                 var (question, msg) = questionEx;
                 if (question == null)
                     return NotFound(new QuestionDtoEx(questionEx));
+                Console.WriteLine(JsonConvert.SerializeObject(question));
 
                 var categoryService = new CategoryService(dbService);
                 var answerService = new AnswerService(dbService);
@@ -98,6 +98,7 @@ namespace NewKnowledgeAPI.Q.Questions
                             .Where(w => w.Length > 2)
                             .ToList();
                 List<QuestionRowDto> quests = await questionService.GetQuests(words, count);
+                Console.WriteLine(JsonConvert.SerializeObject(quests));
                 return Ok(quests);
             }
             catch (Exception ex)
@@ -147,8 +148,9 @@ namespace NewKnowledgeAPI.Q.Questions
                 Console.WriteLine("===>>> UpdateQuestion: {0} \n", questionDto.Title);
                 var questionService = new QuestionService(dbService);
 
-                QuestionEx questionEx = await questionService.UpdateQuestion(new Question(questionDto));
-                if (questionEx!.question != null)
+                QuestionEx questionEx = await questionService.UpdateQuestion(questionDto);
+                Console.WriteLine(JsonConvert.SerializeObject(questionEx));
+                if (questionEx.question != null)
                     return Ok(new QuestionDtoEx(questionEx));
                 return NotFound(new QuestionDtoEx(questionEx));
             }

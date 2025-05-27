@@ -13,7 +13,7 @@ namespace NewKnowledgeAPI.A.Groups
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
     public class ShortGroupController : ControllerBase
     {
         private readonly IConfiguration Configuration;
@@ -33,7 +33,7 @@ namespace NewKnowledgeAPI.A.Groups
         {
             try
             {
-                Console.WriteLine("GetGrpsUpTheTree {0}/{1}", partitionKey, Id);
+                Console.WriteLine("GetGroupsUpTheTree {0}/{1}", partitionKey, Id);
                 var groupService = new GroupService(dbService);
                 GroupKey groupKey = new(partitionKey, Id);
                 GroupListEx groupListEx = await groupService.GetGroupsUpTheTree(groupKey);

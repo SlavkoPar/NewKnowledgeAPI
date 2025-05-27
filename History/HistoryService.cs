@@ -34,26 +34,7 @@ namespace NewKnowledgeAPI.Hist
         {
             this.Db = Db;
         }
-                 
-        public async Task<HttpStatusCode> CheckDuplicate(string? Title, string? Id = null)
-        {
-
-            var sqlQuery = Title != null
-                ? $"SELECT * FROM c WHERE c.Type = 'history' AND c.Title = '{Title}' AND IS_NULL(c.Archived)"
-                : $"SELECT * FROM c WHERE c.Type = 'history' AND c.Id = '{Id}' AND IS_NULL(c.Archived)";
-            QueryDefinition queryDefinition = new(sqlQuery);
-            FeedIterator<History> queryResultSetIterator =
-                _container!.GetItemQueryIterator<History>(queryDefinition);
-            if (queryResultSetIterator.HasMoreResults)
-            {
-                FeedResponse<History> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                if (currentResultSet.Count == 0)
-                {
-                    throw new CosmosException("History Title already exists", HttpStatusCode.NotFound, 0, "0", 0);
-                }
-            }
-            return HttpStatusCode.Found;
-        }
+                
 
         public async Task<HistoryEx?> AddHistory(HistoryData historyData)
         {

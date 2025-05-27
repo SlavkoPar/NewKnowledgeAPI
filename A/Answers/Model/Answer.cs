@@ -37,8 +37,9 @@ namespace NewKnowledgeAPI.A.Answers.Model
         public AnswerRow(AnswerDto answerDto)
         : base(answerDto.Created, answerDto.Modified, null)
         {
-            string s = DateTime.Now.Ticks.ToString();
-            Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            // string s = DateTime.Now.Ticks.ToString();
+            // Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            Id = answerDto.Id;
             PartitionKey = answerDto.PartitionKey!;
             ParentGroup = answerDto.ParentGroup;
             Title = answerDto.Title;

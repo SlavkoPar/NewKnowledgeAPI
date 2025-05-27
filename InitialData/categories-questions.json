@@ -91,7 +91,21 @@
                       "Title": "Chargers",
                       "Link": "/categories/CHARGERS_null",
                       "Header": "",
-                      "Kind": 2
+                      "Kind": 2,
+                      "Questions": [
+                        {
+                          "Title": "How long will my charger last?",
+                          "Id": "qqqqqq201",
+                          "AssignedAnswers": [
+                            {
+                              "AnswerKey": {
+                                "partitionKey": "CHARGERS",
+                                "id": "aaaaaa901"
+                              }
+                            }
+                          ]
+                        }
+                      ]
                     },
                     {
                       "Id": "REMOTECTRLS",
@@ -101,31 +115,31 @@
                       "Kind": 2,
                       "Questions": [
                         {
-                          "Title": "Remote controller doesn't work",
-                          "Id": "7770111111",
+                          "Title": "Remote controller doesn't work, let us put some words to see renderening in ChatBot Dlg",
+                          "Id": "qqqqqq111",
                           "AssignedAnswers": [
                             {
                               "AnswerKey": {
                                 "partitionKey": "TELEVISIONS",
-                                "id": "7772294151"
+                                "id": "aaaaaa111"
                               }
                             },
                             {
                               "AnswerKey": {
                                 "partitionKey": "TELEVISIONS",
-                                "id": "7772294152"
+                                "id": "aaaaaa112"
                               }
                             },
                             {
                               "AnswerKey": {
                                 "partitionKey": "TELEVISIONS",
-                                "id": "7772294153"
+                                "id": "aaaaaa113"
                               }
                             },
                             {
                               "AnswerKey": {
                                 "partitionKey": "TELEVISIONS",
-                                "id": "7772294154"
+                                "id": "aaaaaa114"
                               }
                             }
                           ],
@@ -137,12 +151,12 @@
                         },
                         {
                           "Title": "Branch offices",
-                          "Id": "7770222222",
+                          "Id": "qqqqqq112",
                           "AssignedAnswers": [
                             {
                               "AnswerKey": {
                                 "partitionKey": "TELEVISIONS",
-                                "id": "7772294154"
+                                "id": "aaaaaa114"
                               }
                             }
                           ]

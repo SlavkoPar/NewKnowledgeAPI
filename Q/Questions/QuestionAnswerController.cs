@@ -19,7 +19,7 @@ namespace NewKnowledgeAPI.Q.Questions
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize]
+    //[Authorize]
 
     public class QuestionAnswerController : ControllerBase
     {

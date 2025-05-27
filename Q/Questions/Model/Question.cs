@@ -36,8 +36,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public QuestionRow(QuestionDto dto)
             : base(dto.Created, dto.Modified, null)
         {
-            string s = DateTime.Now.Ticks.ToString();
-            Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            //string s = DateTime.Now.Ticks.ToString();
+            //Id = s.Substring(s.Length - 10);// Guid.NewGuid().ToString();
+            Id = dto.Id;
             PartitionKey = dto.PartitionKey!;
             Title = dto.Title;
             ParentCategory = dto.ParentCategory;
@@ -68,7 +69,6 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 
         [JsonProperty(PropertyName = "CategoryTitle", NullValueHandling = NullValueHandling.Ignore)]
         public string? CategoryTitle { get; set; }
-
 
         public List<AssignedAnswer>? AssignedAnswers { get; set; }
         public int? NumOfAssignedAnswers  {get; set;}

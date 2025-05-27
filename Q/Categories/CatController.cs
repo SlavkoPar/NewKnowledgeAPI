@@ -36,7 +36,7 @@ namespace NewKnowledgeAPI.Q.Categories
             {
                 Console.WriteLine("GetCatsUpTheTree {0}/{1}", partitionKey, Id);
                 var categoryService = new CategoryService(dbService);
-                CategoryKey categoryKey = new(partitionKey, Id);
+                var categoryKey = new CategoryKey(partitionKey, Id);
                 CategoryListEx categoryListEx = await categoryService.GetCatsUpTheTree(categoryKey);
                 //Console.WriteLine(JsonConvert.SerializeObject(categoryListEx));
                 var categoryDtoListEx = new CategoryDtoListEx(categoryListEx);

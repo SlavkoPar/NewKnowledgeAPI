@@ -180,9 +180,7 @@ namespace NewKnowledgeAPI.A.Answers
             return new AnswerEx(null, msg);
         }
 
-       
-
-        public async Task<AnswerEx> UpdateAnswer(AnswerDto answerDto)
+        public async Task<AnswerEx> UpdateAnswer(AnswerDto dto)
         {
             var myContainer = await container();
             try
@@ -190,31 +188,30 @@ namespace NewKnowledgeAPI.A.Answers
                 // Read the item to see if it exists.  
                 ItemResponse<Answer> aResponse =
                     await myContainer!.ReadItemAsync<Answer>(
-                        answerDto.Id,
-                        new PartitionKey(answerDto.PartitionKey)
+                        dto.Id,
+                        new PartitionKey(dto.PartitionKey)
                     );
                 Answer answer = aResponse.Resource;
                 var doUpdate = true;
-                if (!answer.Title.Equals(answerDto.Title, StringComparison.OrdinalIgnoreCase))
+                if (!answer.Title.Equals(dto.Title, StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
-                        HttpStatusCode statusCode = await CheckDuplicate(answerDto.Title);
+                        HttpStatusCode statusCode = await CheckDuplicate(dto.Title);
                         doUpdate = false;
-                        var msg = $"Answer with Title: \"{answerDto.Title}\" already exists in database.";
+                        var msg = $"Answer with Title: \"{dto.Title}\" already exists in database.";
                         Debug.WriteLine(msg);
                         return new AnswerEx(null, msg);
                     }
                     catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
                     {
-                        answer.Title = answerDto.Title;
+                        //answer.Title = a.Title;
                     }
                 }
                 if (doUpdate)
                 {
-                    answer.Source = answerDto.Source;
-                    answer.Status = answerDto.Status;
-                    answer.Modified = new WhoWhen(answerDto.Modified!);
+                    answer = new Answer(dto);
+                    answer.Modified = new WhoWhen(dto.Modified);
                     aResponse = await myContainer.ReplaceItemAsync(answer, answer.Id, new PartitionKey(answer.PartitionKey));
                     Console.WriteLine($"Updated Answer \"{answer.Id}\" / \"{answer.Title}\"");
                     return new AnswerEx(aResponse.Resource, "");
@@ -222,7 +219,7 @@ namespace NewKnowledgeAPI.A.Answers
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                var msg = $"Answer Id: \"{answerDto.Id}\" Not Found in database.";
+                var msg = $"Answer Id: \"{dto.Id}\" Not Found in database.";
                 Debug.WriteLine(msg); 
                 return new AnswerEx(null, msg);
             }

@@ -185,13 +185,13 @@ namespace NewKnowledgeAPI.Q.Questions
         }
        
 
-        public async Task<QuestionEx> UpdateQuestion(Question q, List<AssignedAnswer>? assignedAnswers = null)
+        public async Task<QuestionEx> UpdateQuestion(QuestionDto dto)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _, relatedFilters) = q;
+            //var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _, _) = dto;
             Console.WriteLine("========================UpdateQuestion-1");
-            Console.WriteLine(JsonConvert.SerializeObject(q));
-            Console.WriteLine("========================UpdateQuestion-2");
-            Console.WriteLine(JsonConvert.SerializeObject(assignedAnswers));
+            Console.WriteLine(JsonConvert.SerializeObject(dto));
+            // Console.WriteLine("========================UpdateQuestion-2");
+            // Console.WriteLine(JsonConvert.SerializeObject(assignedAnswers));
             Console.WriteLine("========================UpdateQuestion-3");
             var myContainer = await container();
             try
@@ -199,41 +199,36 @@ namespace NewKnowledgeAPI.Q.Questions
                 // Read the item to see if it exists.  
                 ItemResponse<Question> aResponse =
                     await myContainer!.ReadItemAsync<Question>(
-                        Id,
-                        new PartitionKey(PartitionKey)
+                        dto.Id,
+                        new PartitionKey(dto.PartitionKey)
                     );
                 Question question = aResponse.Resource;
                 var doUpdate = true;
-                if (!Title.Equals(question.Title, StringComparison.OrdinalIgnoreCase))
+                if (!question.Title.Equals(dto.Title, StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
-                        HttpStatusCode statusCode = await CheckDuplicate(Title);
+                        HttpStatusCode statusCode = await CheckDuplicate(dto.Title);
                         doUpdate = false;
-                        var msg = $"Question with Title: \"{Title}\" already exists in database.";
+                        var msg = $"Question with Title: \"{dto.Title}\" already exists in database.";
                         Console.WriteLine(msg);
                         return new QuestionEx(null, msg);
                     }
                     catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
                     {
-                        question.Title = question.Title;
+                        //question.Title = q.Title;
                     }
                 }
                 if (doUpdate)
                 {
-                    if (assignedAnswers != null)
-                    {
-                        question.AssignedAnswers = assignedAnswers;
-                        question.NumOfAssignedAnswers = assignedAnswers.Count;
-                    }
-                    question.Modified = q.Modified!;
-                    aResponse = await myContainer.ReplaceItemAsync(question, Id, new PartitionKey(PartitionKey));
+                    question = new Question(dto);
+                    aResponse = await myContainer.ReplaceItemAsync(question, question.Id, new PartitionKey(question.PartitionKey));
                     return new QuestionEx(aResponse.Resource, "");
                 }
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                var msg = $"Question Id: \"{Id}\" Not Found in database.";
+                var msg = $"Question Id: \"{dto.Id}\" Not Found in database.";
                 Debug.WriteLine(msg); 
                 return new QuestionEx(null, msg);
             }
@@ -246,14 +241,43 @@ namespace NewKnowledgeAPI.Q.Questions
         }
 
 
-        public async Task<QuestionEx> UpdateQuestionFilters(Question q, List<RelatedFilter>? relatedFilters = null)
+        public async Task<QuestionEx> UpdateQuestion(Question q, List<AssignedAnswer> assignedAnswers)
+        {
+            var myContainer = await container();
+            try
+            {
+                // Read the item to see if it exists.  
+                ItemResponse<Question> aResponse =
+                    await myContainer!.ReadItemAsync<Question>(
+                        q.Id,
+                        new PartitionKey(q.PartitionKey)
+                    );
+                Question question = aResponse.Resource;
+                question.AssignedAnswers = assignedAnswers;
+                question.NumOfAssignedAnswers = assignedAnswers.Count;
+                question.Modified = q.Modified;
+                aResponse = await myContainer.ReplaceItemAsync(question, question.Id, new PartitionKey(question.PartitionKey));
+                return new QuestionEx(aResponse.Resource, "");
+            }
+            catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
+            {
+                var msg = $"Question Id: \"{q.Id}\" Not Found in database.";
+                Debug.WriteLine(msg);
+                return new QuestionEx(null, msg);
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Debug.WriteLine(ex.Message);
+            }
+            return new QuestionEx(null, "Server Problem Update");
+        }
+
+
+
+        public async Task<QuestionEx> UpdateQuestionFilters(Question q, List<RelatedFilter> relatedFilters)
         {
             var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _, _ /*relatedFilters*/) = q;
-            Console.WriteLine("========================UpdateQuestion-1");
-            Console.WriteLine(JsonConvert.SerializeObject(q));
-            Console.WriteLine("========================UpdateQuestion-2");
-            Console.WriteLine(JsonConvert.SerializeObject(relatedFilters));
-            Console.WriteLine("========================UpdateQuestion-3");
             var myContainer = await container();
             try
             {
@@ -264,33 +288,11 @@ namespace NewKnowledgeAPI.Q.Questions
                         new PartitionKey(PartitionKey)
                     );
                 Question question = aResponse.Resource;
-                var doUpdate = true;
-                if (!Title.Equals(question.Title, StringComparison.OrdinalIgnoreCase))
-                {
-                    try
-                    {
-                        HttpStatusCode statusCode = await CheckDuplicate(Title);
-                        doUpdate = false;
-                        var msg = $"Question with Title: \"{Title}\" already exists in database.";
-                        Debug.WriteLine(msg);
-                        return new QuestionEx(null, msg);
-                    }
-                    catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
-                    {
-                        question.Title = question.Title;
-                    }
-                }
-                if (doUpdate)
-                {
-                    if (relatedFilters != null)
-                    {
-                        question.RelatedFilters = relatedFilters;
-                        question.NumOfRelatedFilters = relatedFilters.Count;
-                    }
-                    question.Modified = q.Modified!;
-                    aResponse = await myContainer.ReplaceItemAsync(question, Id, new PartitionKey(PartitionKey));
-                    return new QuestionEx(aResponse.Resource, "");
-                }
+                question.RelatedFilters = relatedFilters;
+                question.NumOfRelatedFilters = relatedFilters.Count;
+                question.Modified = q.Modified!;
+                aResponse = await myContainer.ReplaceItemAsync(question, Id, new PartitionKey(PartitionKey));
+                return new QuestionEx(aResponse.Resource, "");
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
@@ -424,20 +426,17 @@ namespace NewKnowledgeAPI.Q.Questions
 
                 }
                 sqlQuery += $" ORDER BY c.Title OFFSET 0 LIMIT {count}";
+                Console.WriteLine(sqlQuery);   
 
-
-                QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);
-                using (FeedIterator<QuestionRowDto> queryResultSetIterator = 
+                QueryDefinition queryDefinition = new QueryDefinition(sqlQuery);    
+                using (FeedIterator<QuestionRowDto> queryResultSetIterator   = 
                     myContainer!.GetItemQueryIterator<QuestionRowDto>(queryDefinition))
                 {
                     while (queryResultSetIterator.HasMoreResults)
                     {
                         FeedResponse<QuestionRowDto> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                         return currentResultSet.ToList();
-                        //foreach (Quest question in currentResultSet)
-                        //{
-                        //    quests.Add(new QuestionRowDto(question));
-                        //}
+                       
                     }
                 }
                 return [];
@@ -501,20 +500,19 @@ namespace NewKnowledgeAPI.Q.Questions
 
         public async Task<Question> SetAnswerTitles(Question question, AnswerService answerService)
         {
-            var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, AssignedAnswers, relatedFilters) = question;
-            if (AssignedAnswers.Count > 0)
+            var (PartitionKey, Id, _, _, _, Source, Status, assignedAnswers, _) = question;
+            if (assignedAnswers != null && assignedAnswers.Count > 0)
             {
-                var answerIds = AssignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
+                var answerIds = assignedAnswers.Select(a => a.AnswerKey.Id).Distinct().ToList();
                 Dictionary<string, AnswerTitleLink> dict = await answerService.GetTitlesAndLinks(answerIds);
                 Console.WriteLine(JsonConvert.SerializeObject(dict));
-                foreach (var assignedAnswer in AssignedAnswers)
+                foreach (var assignedAnswer in assignedAnswers)
                 {
                     AnswerTitleLink titleLink = dict[assignedAnswer.AnswerKey.Id];
                     assignedAnswer.AnswerTitle = titleLink.Title;
                     assignedAnswer.AnswerLink = titleLink.Link;
                 }
             }
-
             return question;
         }
 

@@ -12,7 +12,6 @@ namespace NewKnowledgeAPI.Q.Categories
     [ApiController]
     //[Authorize]
     //[RequiredScope(RequiredScopesConfigurationKey = "AzureAd:Scopes")]
-
     public class CategoryController : ControllerBase
     {
         private readonly IConfiguration Configuration;

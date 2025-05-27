@@ -18,7 +18,6 @@ namespace NewKnowledgeAPI.A.Groups
         private readonly IConfiguration Configuration;
         DbService dbService { get; set; }
 
-
         public GroupController(IConfiguration configuration)
         {
             dbService = new DbService(configuration);
