@@ -52,17 +52,11 @@ namespace NewKnowledgeAPI.Q.Questions.Model
 
     public class QuestionDto : RecordDto // QuestionRowDto
     {
-        /// <summary>
-        ///     QuestionRowDto
-        /// </summary>
         public string PartitionKey { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
         public string? CategoryTitle { get; set; }
         public string? ParentCategory { get; set; }
-        /// <summary>
-        /// QuestionDto
-        /// </summary>
         public List<AssignedAnswerDto>? AssignedAnswerDtos { get; set; }
         public int NumOfAssignedAnswers { get; set; }
         public List<RelatedFilterDto>? RelatedFilterDtos { get; set; }
@@ -70,9 +64,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public int Source { get; set; }
         public int Status { get; set; }
 
-
         public QuestionDto()
             : base()
+
         {
         }
 
@@ -110,5 +104,19 @@ namespace NewKnowledgeAPI.Q.Questions.Model
             Source = question.Source;
             Status = question.Status;
         }
+
+        public void Deconstruct(out string partitionKey, out string id, out string? parentCategory,
+                              out string title, out int source, out int status, out WhoWhenDto? modified)
+
+        {
+            partitionKey = PartitionKey;
+            id = Id;
+            parentCategory = ParentCategory;
+            title = Title;
+            source = Source;
+            status = Status;
+            modified = Modified;
+        }
+
     }
 }

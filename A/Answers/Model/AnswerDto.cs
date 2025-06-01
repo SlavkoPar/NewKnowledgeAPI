@@ -12,7 +12,6 @@ namespace NewKnowledgeAPI.A.Answers.Model
         public string PartitionKey { get; set; }
         public string Id { get; set; }
         public string Title { get; set; }
-        public string? Link { get; set; }
         public string? GroupTitle { get; set; }
         public string? ParentGroup { get; set; }
 
@@ -78,6 +77,7 @@ namespace NewKnowledgeAPI.A.Answers.Model
             PartitionKey = answer.PartitionKey;
             Id = answer.Id;
             Title = answer.Title;
+            Link = answer.Link;
             GroupTitle = answer.GroupTitle;
             ParentGroup = answer.ParentGroup;
 

@@ -8,9 +8,9 @@ namespace NewKnowledgeAPI.Q.Questions.Model
     {
         public List<QuestionRow> QuestionRows { get; set; }
         public bool HasMoreQuestions { get; set; }
-        public QuestionsMore(List<QuestionRow> questions, bool hasMore)
+        public QuestionsMore(List<QuestionRow> questionRows, bool hasMore)
         {
-            QuestionRows = questions;
+            QuestionRows = questionRows;
             HasMoreQuestions = hasMore;
         }
     }

@@ -24,7 +24,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public int? NumOfQuestions { get; set; }
         public bool? HasSubCategories { get; set; }
         
-        public List<QuestionDto>? Questions { get; set; }
+        public List<QuestionRowDto>? QuestionRowDtos { get; set; }
         public bool? HasMoreQuestions { get; set; }
 
         public CategoryDto()
@@ -51,14 +51,13 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             //if (questionsMore.questions.Count > 0) {
             //    Question q = questionsMore.questions.First();
             //}
-            Questions = Questions2Dto(questionsMore.QuestionRows.Select(row => new Question(row)).ToList());
+            QuestionRowDtos = Questions2Dto(questionsMore.QuestionRows/*.Select(row => new Question(row))*/.ToList());
             HasMoreQuestions = questionsMore.HasMoreQuestions;
         }
 
         public CategoryDto(Category category)
             : base(category.Created, category.Modified)
         {
-
             var(partitionKey, id, parentCategory, title, link, header, level, kind,
                 hasSubCategories, hasMoreQuestions, variations, questions) = category;
             Id = id;
@@ -74,7 +73,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             HasSubCategories = hasSubCategories;
             if (questions == null)
             {
-                Questions = null;
+                QuestionRowDtos = null;
                 HasMoreQuestions = false;
             }
             else
@@ -82,7 +81,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
                 //IList<QuestionDto> questions = new List<QuestionDto>();
                 //foreach (var question in category.questions)
                 //    questions.Add(new QuestionDto(question));
-                Questions = Questions2Dto(questions!);
+                QuestionRowDtos = Questions2Dto(questions!);
                 HasMoreQuestions = hasMoreQuestions;
             }
         }
@@ -117,7 +116,8 @@ namespace NewKnowledgeAPI.Q.Categories.Model
 
         public void Deconstruct(out string partitionKey, out string id, out string parentCategory, 
                 out string title, out string? link, 
-                out int level, out int kind, out List<string>? variations)
+                out int level, out int kind, out List<string>? variations,
+                out WhoWhenDto? modified)
         {
             partitionKey = PartitionKey;
             id = Id;
@@ -127,6 +127,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             kind = Kind;
             level = Level;
             variations = Variations;
+            modified = Modified;
         }
 
     }

@@ -23,7 +23,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public bool HasSubCategories { get; set; }
 
         [JsonProperty(PropertyName = "Questions", NullValueHandling = NullValueHandling.Ignore)]
-        public List<Question>? Questions { get; set; }
+        public List<QuestionRow>? QuestionRows { get; set; }
 
         [JsonProperty(PropertyName = "HasMoreQuestions", NullValueHandling = NullValueHandling.Ignore)]
         public bool? HasMoreQuestions { get; set; }
@@ -58,7 +58,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Variations = variations ?? null;
             NumOfQuestions = questions == null ? 0 : questions.Count;
             HasSubCategories = categories != null && categories.Count > 0;
-            Questions = null;
+            QuestionRows = null;
         }
 
         public Category(CategoryDto categoryDto)
@@ -73,7 +73,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             ParentCategory = categoryDto.ParentCategory;
             Level = categoryDto.Level;
             Variations = categoryDto.Variations ?? null;
-            Questions = null;
+            QuestionRows = null;
             NumOfQuestions = 0;
             HasSubCategories = false;
         }
@@ -94,7 +94,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             out bool hasSubCategories,
             out bool? hasMoreQuestions,
             out List<string>? variations,
-            out List<Question>? questions)
+            out List<QuestionRow>? questionRows)
         {
             partitionKey = PartitionKey;
             id = Id;
@@ -107,7 +107,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             hasSubCategories = HasSubCategories;
             hasMoreQuestions = HasMoreQuestions;
             variations = Variations;
-            questions = Questions;
+            questionRows = QuestionRows;
         }
 
 

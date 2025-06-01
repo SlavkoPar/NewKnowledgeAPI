@@ -1,13 +1,15 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Knowledge.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Configuration;
-using System.Configuration;
-using Newtonsoft.Json;
-using Knowledge.Services;
-using Microsoft.AspNetCore.Authorization;
-using NewKnowledgeAPI.A.Groups.Model;
 using NewKnowledgeAPI.A.Answers.Model;
 using NewKnowledgeAPI.A.Groups;
+using NewKnowledgeAPI.A.Groups.Model;
+using NewKnowledgeAPI.Q.Questions;
+using NewKnowledgeAPI.Q.Questions.Model;
+using Newtonsoft.Json;
+using System.Configuration;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -86,7 +88,7 @@ namespace NewKnowledgeAPI.A.Answers
         }
 
         [HttpGet("{filter}/{count}/{nesto}")]
-        public async Task<IActionResult> GetAnswers(string filter, int count, string nesto)
+        public async Task<IActionResult> GetAnswersss(string filter, int count, string nesto)
         {
             Console.WriteLine("GetShortAnswers", filter, count, nesto);
             try
@@ -106,7 +108,7 @@ namespace NewKnowledgeAPI.A.Answers
             }
         }
 
-
+         
         [HttpPost]
         [Authorize]
         public async Task<IActionResult> Post([FromBody] AnswerDto answerDto)

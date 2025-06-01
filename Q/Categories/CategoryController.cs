@@ -2,6 +2,7 @@
 using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
 using NewKnowledgeAPI.Q.Categories.Model;
+using Newtonsoft.Json;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -110,7 +111,10 @@ namespace NewKnowledgeAPI.Q.Categories
                 //    partitionKey, id, true, pageSize, includeQuestionId=="null" ? null : includeQuestionId);
                 var categoryService = new CategoryService(dbService);
                 CategoryEx categoryEx = await categoryService.GetCategory(
-                       categoryKey, true, pageSize, includeQuestionId == "null" ? null : includeQuestionId);
+                       categoryKey, true, 
+                       pageSize, 
+                       includeQuestionId == "null" ? null : includeQuestionId
+                );
                 if (categoryEx.category != null)
                 {
                     return Ok(new CategoryDtoEx(categoryEx));
@@ -158,7 +162,7 @@ namespace NewKnowledgeAPI.Q.Categories
                 {
                     return Ok(new CategoryDtoEx(categoryEx));
                 }
-                return NotFound(new CategoryDtoEx(categoryEx));
+                return NotFound(new CategoryDtoEx("Jok Found"));
             }
             catch (Exception ex)
             {

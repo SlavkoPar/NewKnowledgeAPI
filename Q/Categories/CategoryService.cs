@@ -107,7 +107,7 @@ namespace NewKnowledgeAPI.Q.Categories
                     {
                         var questionService = new QuestionService(Db);
                         QuestionsMore questionsMore = await questionService.GetQuestions(Id, 0, pageSize, includeQuestionId);
-                        category.Questions = questionsMore.QuestionRows.Select(questionRow => new Question(questionRow)).ToList();
+                        category.QuestionRows = questionsMore.QuestionRows/*.Select(questionRow => new Question(questionRow))*/.ToList();
                         category.HasMoreQuestions = questionsMore.HasMoreQuestions;
                     }
                 }
@@ -252,36 +252,36 @@ namespace NewKnowledgeAPI.Q.Categories
             return categoryEx;
         }
 
-
-
         public async Task<CategoryEx> UpdateCategory(CategoryDto categoryDto)
         {
             var myContainer = await container();
             string msg = string.Empty;
             try
             {
-                var (PartitionKey, Id, ParentCategory, Title, Link, Level, Kind, Variations) = categoryDto;
+                var (partitionKey, id, parentCategory, title, link, level, kind, variations, modified) = categoryDto;
                 // Read the item to see if it exists.  
                 ItemResponse<Category> aResponse =
                     await myContainer!.ReadItemAsync<Category>(
-                        Id,
-                        new PartitionKey(PartitionKey)
+                        id,
+                        new PartitionKey(partitionKey)
                     );
                 Category category = aResponse.Resource;
                 // Update the item fields
-                category.Title = Title;
-                category.Link = Link;
-                category.Kind = Kind;
-                category.Variations = Variations;
-                category.ParentCategory = ParentCategory;
-                //category.Modified = new WhoWhen(categoryDto.Modified!.NickName);
-
-                aResponse = await myContainer.ReplaceItemAsync(category, category.Id, new PartitionKey(category.PartitionKey));
-                Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);
+                category.Title = title;
+                category.Link = link;
+                category.Kind = kind;
+                category.Variations = variations;
+                category.ParentCategory = parentCategory;
+                if (modified != null)
+                {
+                    category.Modified = new WhoWhen(modified.NickName);
+                }
+                aResponse = await myContainer.ReplaceItemAsync(category, id, new PartitionKey(partitionKey));
+                Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", title, id, category);
 
                 // update parentCategory
-                categoryDto.Modified = categoryDto.Modified;
-                await UpdateHasSubCategories(categoryDto);
+                //categoryDto.Modified = categoryDto.Modified;
+                //await UpdateHasSubCategories(categoryDto);
 
                 return new CategoryEx(category, msg);
             }
@@ -299,16 +299,17 @@ namespace NewKnowledgeAPI.Q.Categories
             return new CategoryEx(null, msg);
         }
 
-        public async Task<Category> UpdateNumOfQuestions(QuestionDto questionDto, int incr)
+        public async Task<Category> UpdateNumOfQuestions(CategoryKey categoryKey, WhoWhen modified, int incr)
         {
+            var ( partitionKey, id ) = categoryKey;
             var myContainer = await container();
             try
             {
                 // Read the item to see if it exists.  
                 ItemResponse<Category> aResponse =
                     await myContainer!.ReadItemAsync<Category>(
-                        questionDto.ParentCategory,
-                        new PartitionKey(questionDto.PartitionKey)
+                        id,
+                        new PartitionKey(partitionKey)
                     );
                 Category category = aResponse.Resource;
                 
@@ -317,7 +318,7 @@ namespace NewKnowledgeAPI.Q.Categories
                     category.NumOfQuestions++;
                 else
                     category.NumOfQuestions--;
-                category.Modified = new WhoWhen(questionDto.Modified!);
+                category.Modified = new WhoWhen(modified!.NickName); //new WhoWhen(questionDto.Modified!);
 
                 aResponse = await myContainer.ReplaceItemAsync(category, category.Id, new PartitionKey(category.PartitionKey));
                 Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);
@@ -325,7 +326,7 @@ namespace NewKnowledgeAPI.Q.Categories
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
             {
-                Debug.WriteLine("Category item {0}/{1} NotFound in database.\n", questionDto.PartitionKey, questionDto.Id); //, aResponse.RequestCharge);
+                Debug.WriteLine("Category item {0}/{1} NotFound in database.\n", partitionKey, id); //, aResponse.RequestCharge);
             }
             catch (Exception ex)
             {
@@ -337,7 +338,7 @@ namespace NewKnowledgeAPI.Q.Categories
 
         public async Task<Category> UpdateHasSubCategories(CategoryDto categoryDto)
         {
-            var (PartitionKey, Id, ParentCategory, Title, Link, Level, Kind, Variations) = categoryDto;
+            var (PartitionKey, Id, ParentCategory, Title, Link, Level, Kind, Variations, modified) = categoryDto;
             var myContainer = await container();
             try
             {
@@ -439,7 +440,6 @@ namespace NewKnowledgeAPI.Q.Categories
                 // update parentCategory
                 categoryDto.Modified = categoryDto.Modified;
                 await UpdateHasSubCategories(categoryDto);
-
                 return new CategoryEx(aResponse.Resource, msg);
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)

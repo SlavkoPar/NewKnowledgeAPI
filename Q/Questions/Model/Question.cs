@@ -14,6 +14,7 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public string PartitionKey { get; set; }
 
         public string? ParentCategory { get; set; }
+        public int? NumOfAssignedAnswers { get; set; }
 
         public string Title { get; set; }
 
@@ -71,7 +72,6 @@ namespace NewKnowledgeAPI.Q.Questions.Model
         public string? CategoryTitle { get; set; }
 
         public List<AssignedAnswer>? AssignedAnswers { get; set; }
-        public int? NumOfAssignedAnswers  {get; set;}
 
         public List<RelatedFilter>? RelatedFilters { get; set; }
         public int? NumOfRelatedFilters { get; set; }

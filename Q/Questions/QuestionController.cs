@@ -128,7 +128,10 @@ namespace NewKnowledgeAPI.Q.Questions
                 {
                     //Category category = new Category(questionEx.question);
                     questionDto.Modified = questionDto.Created; // to be used for category
-                    await categoryService.UpdateNumOfQuestions(questionDto, 1);
+                    await categoryService.UpdateNumOfQuestions(
+                           new CategoryKey(questionDto.PartitionKey, questionDto.ParentCategory!),
+                           new WhoWhen(questionDto.Modified!),
+                           -1);
                 }
                 // Console.WriteLine("^^^^^^^^^^^ questionEx" + JsonConvert.SerializeObject(questionEx));
                 return Ok(new QuestionDtoEx(questionEx));
@@ -147,11 +150,26 @@ namespace NewKnowledgeAPI.Q.Questions
             {
                 Console.WriteLine("===>>> UpdateQuestion: {0} \n", questionDto.Title);
                 var questionService = new QuestionService(dbService);
+                var categoryService = new CategoryService(dbService);
 
-                QuestionEx questionEx = await questionService.UpdateQuestion(questionDto);
+                QuestionEx questionEx = await questionService.UpdateQuestion(questionDto, categoryService);
+                var (question, msg) = questionEx;
                 Console.WriteLine(JsonConvert.SerializeObject(questionEx));
-                if (questionEx.question != null)
+                if (question != null)
+                {
+                    if (question.ParentCategory != questionDto.ParentCategory) {
+                        // category changed 
+                        await categoryService.UpdateNumOfQuestions(
+                            new CategoryKey(questionDto.PartitionKey, questionDto.ParentCategory!),
+                            new WhoWhen(questionDto.Modified!), 
+                            -1);
+                        await categoryService.UpdateNumOfQuestions(
+                            new CategoryKey(question.PartitionKey, question.ParentCategory!),
+                            question.Modified!, 
+                            1);
+                    }
                     return Ok(new QuestionDtoEx(questionEx));
+                }
                 return NotFound(new QuestionDtoEx(questionEx));
             }
             catch (Exception ex)
@@ -173,7 +191,10 @@ namespace NewKnowledgeAPI.Q.Questions
                 if (questionEx!.question != null)
                 {
                     questionDto.Modified = questionDto.Modified; //.Archived;
-                    await categoryService.UpdateNumOfQuestions(questionDto, -1);
+                    await categoryService.UpdateNumOfQuestions(
+                           new CategoryKey(questionDto.PartitionKey, questionDto.ParentCategory!),
+                           new WhoWhen(questionDto.Modified!),
+                           -1);
                     return Ok(new QuestionDtoEx(questionEx));
                 }
                 return NotFound(questionEx);

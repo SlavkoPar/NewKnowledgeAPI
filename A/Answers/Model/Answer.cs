@@ -14,7 +14,6 @@ namespace NewKnowledgeAPI.A.Answers.Model
         public string PartitionKey { get; set; }
 
         public string Title { get; set; }
-        public string? Link { get; set; }
 
         public string? ParentGroup { get; set; }
 
@@ -31,7 +30,7 @@ namespace NewKnowledgeAPI.A.Answers.Model
             PartitionKey = answerData.ParentGroup!;
             ParentGroup = answerData.ParentGroup;
             Title = answerData.Title;
-            Link = answerData.Link;
+            
         }
 
         public AnswerRow(AnswerDto answerDto)
@@ -43,7 +42,6 @@ namespace NewKnowledgeAPI.A.Answers.Model
             PartitionKey = answerDto.PartitionKey!;
             ParentGroup = answerDto.ParentGroup;
             Title = answerDto.Title;
-            Link = answerDto.Link;
         }
 
         public AnswerRow(AnswerRow row)
@@ -52,17 +50,16 @@ namespace NewKnowledgeAPI.A.Answers.Model
             Id = row.Id;
             PartitionKey = row.PartitionKey!;
             Title = row.Title;
-            Link = row.Link;
             ParentGroup = row.ParentGroup;
         }
 
         public void Deconstruct(out string partitionKey, out string id, 
-            out string title, out string? link, out string? parentGroup)
+            out string title, out string? parentGroup)
         {
             partitionKey = PartitionKey;
             id = Id;
             title = Title;
-            link = Link;
+            
             parentGroup = ParentGroup;
         }
     }
@@ -73,6 +70,8 @@ namespace NewKnowledgeAPI.A.Answers.Model
         public string? GroupTitle { get; set; }
         public int Source { get; set; }
         public int Status { get; set; }
+        public string? Link { get; set; }
+
 
         public Answer()
             :  base()
@@ -92,6 +91,7 @@ namespace NewKnowledgeAPI.A.Answers.Model
             GroupTitle = null;
             Source = 0;
             Status = 0;
+            Link = answerData.Link;
         }
 
         public Answer(AnswerDto answerDto)
@@ -100,7 +100,8 @@ namespace NewKnowledgeAPI.A.Answers.Model
             Type = "answer";
             GroupTitle = null;
             Source = answerDto.Source;
-            Status = answerDto.Status;    
+            Status = answerDto.Status;
+            Link = answerDto.Link;
         }
 
         //public override string ToString() => 

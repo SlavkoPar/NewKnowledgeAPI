@@ -183,11 +183,10 @@ namespace NewKnowledgeAPI.Q.Questions
             Console.WriteLine("*****************************");
             return new QuestionEx(null, msg);
         }
-       
 
-        public async Task<QuestionEx> UpdateQuestion(QuestionDto dto)
+        public async Task<QuestionEx> UpdateQuestion(QuestionDto dto, CategoryService categoryService)
         {
-            //var (PartitionKey, Id, Title, ParentCategory, Type, Source, Status, _, _) = dto;
+            var (partitionKey, id, parentCategory, title, source, status, modified) = dto;
             Console.WriteLine("========================UpdateQuestion-1");
             Console.WriteLine(JsonConvert.SerializeObject(dto));
             // Console.WriteLine("========================UpdateQuestion-2");
@@ -199,18 +198,19 @@ namespace NewKnowledgeAPI.Q.Questions
                 // Read the item to see if it exists.  
                 ItemResponse<Question> aResponse =
                     await myContainer!.ReadItemAsync<Question>(
-                        dto.Id,
-                        new PartitionKey(dto.PartitionKey)
+                        id,
+                        new PartitionKey(partitionKey)
                     );
                 Question question = aResponse.Resource;
+
                 var doUpdate = true;
-                if (!question.Title.Equals(dto.Title, StringComparison.OrdinalIgnoreCase))
+                if (!question.Title.Equals(title, StringComparison.OrdinalIgnoreCase))
                 {
                     try
                     {
-                        HttpStatusCode statusCode = await CheckDuplicate(dto.Title);
+                        HttpStatusCode statusCode = await CheckDuplicate(title);
                         doUpdate = false;
-                        var msg = $"Question with Title: \"{dto.Title}\" already exists in database.";
+                        var msg = $"Question with Title: \"{title}\" already exists in database.";
                         Console.WriteLine(msg);
                         return new QuestionEx(null, msg);
                     }
@@ -221,7 +221,18 @@ namespace NewKnowledgeAPI.Q.Questions
                 }
                 if (doUpdate)
                 {
-                    question = new Question(dto);
+                    if (question.ParentCategory != parentCategory)
+                    {
+                        // changed Category
+                    }
+                    // Update the item fields
+                    question.Title = title;
+                    question.Source = source;
+                    question.Status = status;
+                    question.ParentCategory = parentCategory;   
+                    if (modified != null) {
+                        question.Modified = new WhoWhen(modified.NickName);
+                    }
                     aResponse = await myContainer.ReplaceItemAsync(question, question.Id, new PartitionKey(question.PartitionKey));
                     return new QuestionEx(aResponse.Resource, "");
                 }
@@ -272,7 +283,6 @@ namespace NewKnowledgeAPI.Q.Questions
             }
             return new QuestionEx(null, "Server Problem Update");
         }
-
 
 
         public async Task<QuestionEx> UpdateQuestionFilters(Question q, List<RelatedFilter> relatedFilters)
