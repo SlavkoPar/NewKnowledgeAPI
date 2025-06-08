@@ -30,17 +30,17 @@ namespace NewKnowledgeAPI.Q.Categories
     
         [HttpGet("{partitionKey}/{id}")]
         [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
-        public async Task<IActionResult> GetCatsUpTheTree(string partitionKey, string Id)
+        public async Task<IActionResult> GetCatsUpTheTree(string partitionKey, string id)
         {
             try
             {
-                Console.WriteLine("GetCatsUpTheTree {0}/{1}", partitionKey, Id);
+                Console.WriteLine("GetCatsUpTheTree {0}/{1}", partitionKey, id);
                 var categoryService = new CategoryService(dbService);
-                var categoryKey = new CategoryKey(partitionKey, Id);
-                CategoryListEx categoryListEx = await categoryService.GetCatsUpTheTree(categoryKey);
-                //Console.WriteLine(JsonConvert.SerializeObject(categoryListEx));
-                var categoryDtoListEx = new CategoryDtoListEx(categoryListEx);
-                return Ok(categoryDtoListEx);
+                var categoryKey = new CategoryKey(partitionKey, id);
+                CategoryEx categoryEx = await categoryService.GetCatsUpTheTree(categoryKey);
+                Console.WriteLine(JsonConvert.SerializeObject(categoryEx));
+                var categoryDtoEx = new CategoryDtoEx(categoryEx);
+                return Ok(categoryDtoEx);
             }
             catch (Exception ex)
             {
@@ -52,8 +52,7 @@ namespace NewKnowledgeAPI.Q.Categories
 
 
         [HttpGet("{partitionKey}/{id}/{hidrate}")]
-        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
-
+        //[ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
         public async Task<IActionResult> GetCategoryHidrated(string partitionKey, string id, bool hidrate)
         {
             // hidrate collections except questions

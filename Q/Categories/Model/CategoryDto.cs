@@ -7,25 +7,31 @@ namespace NewKnowledgeAPI.Q.Categories.Model
 {
     public class CategoryDto : RecordDto
     {
+        public string? PartitionKey { get; set; }
+
         [JsonProperty(PropertyName = "Id")]
         public string Id { get; set; }
 
         [JsonProperty(PropertyName = "PartitionKey")]
-        public string? PartitionKey { get; set; }
+        public string? RootId { get; set; }
+        public string? ParentCategory { get; set; }
+
 
         public string Title { get; set; }
         public string? Link { get; set; }
         public string Header { get; set; }
 
         public int Kind { get; set; }
-        public string? ParentCategory { get; set; }
         public int Level { get; set; }
         public List<string>? Variations { get; set; }
-        public int? NumOfQuestions { get; set; }
-        public bool? HasSubCategories { get; set; }
-        
-        public List<QuestionRowDto>? QuestionRowDtos { get; set; }
+        public bool HasSubCategories { get; set; }
+        public List<Category> SubCategories { get; set; }
+        public int NumOfQuestions { get; set; }
+        public List<QuestionRowDto> QuestionRowDtos { get; set; }
         public bool? HasMoreQuestions { get; set; }
+
+        public bool? IsExpanded { get; set; }
+       
 
         public CategoryDto()
             : base()
@@ -58,22 +64,27 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public CategoryDto(Category category)
             : base(category.Created, category.Modified)
         {
-            var(partitionKey, id, parentCategory, title, link, header, level, kind,
-                hasSubCategories, hasMoreQuestions, variations, questions) = category;
+            var (partitionKey, id, parentCategory, title, link, header, level, kind,
+                hasSubCategories, subCategories,
+                hasMoreQuestions, numOfQuestions, questionRows, variations, isExpanded, rootId) = category;
+
             Id = id;
             PartitionKey = partitionKey!;
             Title = title;
             Link = link;
             Header = header;   
             Kind = kind;
+            RootId = rootId;
             ParentCategory = parentCategory;
             Level = level;
             Variations = variations;
-            NumOfQuestions = category.NumOfQuestions; //questions == null ? 0 : questions.Count;
             HasSubCategories = hasSubCategories;
-            if (questions == null)
+            SubCategories = subCategories ?? [];
+            NumOfQuestions = NumOfQuestions; //questions == null ? 0 : questions.Count;
+            IsExpanded = isExpanded;
+            if (questionRows == null)
             {
-                QuestionRowDtos = null;
+                QuestionRowDtos = [];
                 HasMoreQuestions = false;
             }
             else
@@ -81,7 +92,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
                 //IList<QuestionDto> questions = new List<QuestionDto>();
                 //foreach (var question in category.questions)
                 //    questions.Add(new QuestionDto(question));
-                QuestionRowDtos = Questions2Dto(questions!);
+                QuestionRowDtos = Questions2Dto(questionRows!);
                 HasMoreQuestions = hasMoreQuestions;
             }
         }

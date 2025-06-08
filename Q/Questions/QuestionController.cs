@@ -34,6 +34,7 @@ namespace NewKnowledgeAPI.Q.Questions
 
 
         [HttpGet("{partitionKey}/{parentCategory}/{startCursor}/{pageSize}/{includeQuestionId}")]
+        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentCategory", "startCursor" })]
         public async Task<IActionResult> GetQuestions(string partitionKey, string parentCategory, int startCursor, int pageSize, string? includeQuestionId)
         {
             string message = string.Empty;
@@ -86,7 +87,8 @@ namespace NewKnowledgeAPI.Q.Questions
         }
 
         [HttpGet("{filter}/{count}/{nesto}")]
-        public async Task<IActionResult> GetQuests(string filter, int count, string nesto)
+        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "filter", "count", "nesto" })]
+        public async Task<IActionResult> SearchQuestionRows(string filter, int count, string nesto)
         {
             Console.WriteLine("GetQuests", filter, count, nesto);
             try
@@ -97,7 +99,7 @@ namespace NewKnowledgeAPI.Q.Questions
                             .Split(' ', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                             .Where(w => w.Length > 2)
                             .ToList();
-                List<QuestionRowDto> quests = await questionService.GetQuests(words, count);
+                List<QuestionRowDto> quests = await questionService.SearchQuestionRows(words, count);
                 Console.WriteLine(JsonConvert.SerializeObject(quests));
                 return Ok(quests);
             }

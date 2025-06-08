@@ -34,7 +34,8 @@ namespace NewKnowledgeAPI.A.Answers
 
 
         [HttpGet("{partitionKey}/{parentGroup}/{startCursor}/{pageSize}/{includeAnswerId}")]
-        public async Task<IActionResult> GetAnswers(string partitionKey, string parentGroup, int startCursor, int pageSize, string? includeAnswerId)
+        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "parentGroup", "startCursor" })]
+        public async Task<IActionResult> LoadGroupAnswers(string partitionKey, string parentGroup, int startCursor, int pageSize, string? includeAnswerId)
         {
             string message = string.Empty;
             try
@@ -88,7 +89,8 @@ namespace NewKnowledgeAPI.A.Answers
         }
 
         [HttpGet("{filter}/{count}/{nesto}")]
-        public async Task<IActionResult> GetAnswersss(string filter, int count, string nesto)
+        [ResponseCache(Duration = 10, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "filter", "count", "nesto" })]
+        public async Task<IActionResult> SearchAnswerRows(string filter, int count, string nesto)
         {
             Console.WriteLine("GetShortAnswers", filter, count, nesto);
             try
@@ -99,7 +101,7 @@ namespace NewKnowledgeAPI.A.Answers
                                 .Where(w => w.Length > 2)
                                 .ToList();
                 var answerService = new AnswerService(dbService);
-                List<AnswerRowDto> answers = await answerService.GetShortAnswers(words, count);
+                List<AnswerRowDto> answers = await answerService.SearchAnswerRows(words, count);
                 return Ok(answers);
             }
             catch (Exception ex)

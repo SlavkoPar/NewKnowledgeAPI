@@ -1,6 +1,7 @@
 ﻿using Azure;
 using Knowledge.Services;
 using Microsoft.Azure.Cosmos;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using NewKnowledgeAPI.Common;
 using NewKnowledgeAPI.Q.Categories.Model;
 using NewKnowledgeAPI.Q.Questions;
@@ -38,23 +39,23 @@ namespace NewKnowledgeAPI.Q.Categories
             Db = db;
         }
 
-        internal async Task<List<Category>> GetAllCategories()
+        internal async Task<List<CatDto>> GetAllCats()
         {
             var myContainer = await container();
             var sqlQuery = "SELECT * FROM c WHERE c.Type = 'category' AND IS_NULL(c.Archived) ORDER BY c.Title ASC";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Category> queryResultSetIterator = myContainer.GetItemQueryIterator<Category>(queryDefinition);
             //List<CategoryDto> subCategories = new List<CategoryDto>();
-            List<Category> allCategories = [];
+            List<CatDto> catDtos = [];
             while (queryResultSetIterator.HasMoreResults)
             {
                 FeedResponse<Category> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                 foreach (Category category in currentResultSet)
                 {
-                    allCategories.Add(category);
+                    catDtos.Add(new CatDto(category));
                 }
             }
-            return allCategories;
+            return catDtos;
         }
 
 
@@ -121,9 +122,11 @@ namespace NewKnowledgeAPI.Q.Categories
             }
         }
 
+ 
         public async Task<HttpStatusCode> CheckDuplicate(string title, string id) //QuestionData questionData)
         {
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND (c.Title = '{title.Replace("\'", "\\'")}' OR c.Id = '{id}')";
+            var sqlQuery = "SELECT * FROM c WHERE c.Type = 'category' AND " +
+                           $"(c.Title = '{title.Replace("\'", "\\'")}' OR c.Id = '{id}')";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Question> queryResultSetIterator =
                 _container!.GetItemQueryIterator<Question>(queryDefinition);
@@ -192,7 +195,8 @@ namespace NewKnowledgeAPI.Q.Categories
         {
             //var (PartitionKey, Id, Title, ParentCategory, Kind, Level, Variations, Questions) = category;
             var (partitionKey, id, parentCategory, title, link, header, level, kind,
-                hasSubCategories, hasMoreQuestion, variations, questions) = category;
+                hasSubCategories, subCategories,
+                hasMoreQuestions, numOfQuestions, questionRows, variations, isExpanded, rootId) = category;
 
             var myContainer = await container();
             string msg = string.Empty;
@@ -240,10 +244,12 @@ namespace NewKnowledgeAPI.Q.Categories
 
         public async Task<CategoryEx> CreateCategory(CategoryDto categoryDto)
         {
-            var (Id, PartitionKey) = categoryDto;
+            //var (Id, PartitionKey) = categoryDto;
+            categoryDto.Id = categoryDto.Title.Trim().Replace(' ', '_').ToUpper();
+            categoryDto.PartitionKey = categoryDto.Id;
             var myContainer = await container();
-            var c = new Category(categoryDto);
-            CategoryEx categoryEx = await AddNewCategory(c);
+            var category = new Category(categoryDto);
+            CategoryEx categoryEx = await AddNewCategory(category);
 
             // update parentCategory
             categoryDto.Modified = categoryDto.Modified;
@@ -338,30 +344,32 @@ namespace NewKnowledgeAPI.Q.Categories
 
         public async Task<Category> UpdateHasSubCategories(CategoryDto categoryDto)
         {
-            var (PartitionKey, Id, ParentCategory, Title, Link, Level, Kind, Variations, modified) = categoryDto;
+            var (_, _, parentCategory, _, _, _, _, _, modified) = categoryDto;
             var myContainer = await container();
             try
             {
+                var PartitionKey = parentCategory;
+                var Id = parentCategory;
                 // Read the item to see if it exists.  
                 ItemResponse<Category> aResponse =
                     await myContainer!.ReadItemAsync<Category>(
-                        ParentCategory,
+                        Id,
                         new PartitionKey(PartitionKey)
                     );
                 Category category = aResponse.Resource;
 
                 var sql = $"SELECT value count(1) FROM c WHERE c.Type = 'category' " +
                     "AND c.partitionKey='{PartitionKey} " +
-                    "AND Parentcategory='{ParentCategory}' " + 
+                    "AND Parentcategory='{Id}' " + 
                     "AND IS_NULL(c.Archived)";
                 int num = await CountItems(myContainer, sql);
                 Console.WriteLine($"============================ num: {num}");
 
                 category.HasSubCategories = num > 0;
-                category.Modified = new WhoWhen(categoryDto.Modified!);
+                category.Modified = new WhoWhen(modified!.NickName);
 
-                aResponse = await myContainer.ReplaceItemAsync(category, category.Id, new PartitionKey(category.PartitionKey));
-                Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, category.Id, category);
+                aResponse = await myContainer.ReplaceItemAsync(category, Id, new PartitionKey(PartitionKey));
+                Console.WriteLine("Updated Category [{0},{1}].\n \tBody is now: {2}\n", category.Title, Id, category);
                 return category;
             }
             catch (CosmosException ex) when (ex.StatusCode == HttpStatusCode.NotFound)
@@ -456,40 +464,92 @@ namespace NewKnowledgeAPI.Q.Categories
             return new CategoryEx(null, msg);
         }
 
-        public async Task<CategoryListEx> GetCatsUpTheTree(CategoryKey categoryKey)
+        public async Task<CategoryEx> GetCategoryWithSubCategories(Container container, CategoryKey categoryKey, bool hidrate)
         {
+            var (PartitionKey, Id) = categoryKey;
+            try
+            {
+                Category category = await container!.ReadItemAsync<Category>(Id, new PartitionKey(PartitionKey));
+                //Console.WriteLine(JsonConvert.SerializeObject(category));
+                List<Category> subCategories = [];
+                if (hidrate)
+                {
+                    subCategories = await GetSubCategories(PartitionKey, Id);
+                    subCategories.ForEach(c => c.SubCategories = []);
+                }
+                category.SubCategories = subCategories; 
+                return new CategoryEx(category, "");
+            }
+            catch (Exception ex)
+            {
+                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
+                Debug.WriteLine(ex.Message);
+                return new CategoryEx(null, ex.Message);
+            }
+        }
+
+
+        public async Task<CategoryEx> GetCatsUpTheTree(CategoryKey categoryKey)
+        {
+            var myContainer = await container();
             string message = string.Empty;
-            try {
+            try
+            {
                 string? parentCategory = null;
-                List<Category> list = [];
+                Category? category = null;
+                Category? child = null;
                 do
                 {
-                    CategoryEx categoryEx = await GetCategory(categoryKey, false, 0, null);
+                    var hidrate = category != null;
+                    CategoryEx categoryEx = await GetCategoryWithSubCategories(myContainer, categoryKey, hidrate);
                     // Console.WriteLine("---------------------------------------------------");
                     // Console.WriteLine(JsonConvert.SerializeObject(categoryEx)); 
-                    var (category, msg) = categoryEx;
-                    if (category != null)
+                    var (cat, msg) = categoryEx;
+                    if (cat != null)
                     {
-                        list.Add(category);
-                        parentCategory = category.ParentCategory!;
+                        cat.IsExpanded = category != null;
+                        //child = cat;
+                        int index = cat.SubCategories!.FindIndex(x => x.Id == child!.Id);
+                        if (index >= 0)
+                        {
+                            cat.SubCategories[index] = child.ShallowCopy();
+                        }
+                        cat.IsExpanded = category != null;
+                        child = cat.ShallowCopy();
+                        parentCategory = cat.ParentCategory!;
                         // partitionKey is the same as Id
                         categoryKey = new CategoryKey(parentCategory, parentCategory);
+                        category = cat.DeepCopy();
                     }
                     else
                     {
-                        message = categoryEx.msg;
+                        message = msg;
                         parentCategory = null;
                     }
                 } while (parentCategory != null);
-                return new CategoryListEx(list, message);
+                // put root id to each Category
+                if (category != null) {
+                    SetRootId(category, category.Id);
+                }
+                return new CategoryEx(category, message);
             }
             catch (Exception ex)
             {
                 message = ex.Message;
                 Debug.WriteLine(message);
             }
-            return new CategoryListEx(null, message);
+            return new CategoryEx(null, message);
         }
+
+        void SetRootId(Category cat, string rootId)
+        {
+            cat.RootId = rootId;
+            Debug.Assert(cat.SubCategories != null);
+            cat.SubCategories.ForEach(c => {
+                SetRootId(c, rootId);
+            });
+        }
+
 
         public void Dispose()
         {

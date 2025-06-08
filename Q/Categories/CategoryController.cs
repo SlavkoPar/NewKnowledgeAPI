@@ -1,8 +1,9 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Knowledge.Services;
+﻿using Knowledge.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using NewKnowledgeAPI.Q.Categories.Model;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -27,30 +28,16 @@ namespace NewKnowledgeAPI.Q.Categories
 
         // GET api/<FamilyController>
         [HttpGet]
-        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any)] //, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
-        public async Task<IActionResult> GetAllCategories()
+        //[ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any)] //, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
+        public async Task<IActionResult> GetAllCats()
         {
             try
             {
-                Console.WriteLine("GetAllCategories");
-                //using (var db = new Db(this.Configuration))
-                //{
-                //    await db.Initialize;
-                //var category = new Category(_Db);
-                //List<Category> subCategories = await category.GetAllCategories();
+                Console.WriteLine("GetAllCats");
+                // using (var db = new Db(this.Configuration))
                 var categoryService = new CategoryService(dbService);
-                List<Category> subCategories = await categoryService.GetAllCategories();
-                if (subCategories != null)
-                {
-                    List<CategoryDto> list = [];
-                    foreach (Category cat in subCategories)
-                    {
-                        list.Add(new CategoryDto(cat));
-                    }
-                    return Ok(list);
-                }
-                //}
-                return NotFound();
+                List<CatDto> catDtos = await categoryService.GetAllCats();
+                return Ok(catDtos);
             }
             catch (Exception ex)
             {
@@ -59,7 +46,7 @@ namespace NewKnowledgeAPI.Q.Categories
         }
 
         [HttpGet("{partitionKey}/{id}")]
-        [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
+        //[ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
         public async Task<IActionResult> GetSubCategories(string partitionKey, string id)
         {
             try
@@ -72,6 +59,11 @@ namespace NewKnowledgeAPI.Q.Categories
                 //List<Category> subCategories = await category.GetSubCategories(partitionKey, parentCategory);
                 var categoryService = new CategoryService(dbService);
                 List<Category> subCategories = await categoryService.GetSubCategories(partitionKey, id);
+                //Console.WriteLine("PREEEEEEEEEEEEEEEEEEEEEEEE");
+                //Console.WriteLine(JsonConvert.SerializeObject(subCategories.Select( c => c.Title).ToList()));
+                subCategories.Sort(Category.Comparer);
+                //Console.WriteLine("POSELEEEEEEEEEEEEEEEEEEEEE");
+                //Console.WriteLine(JsonConvert.SerializeObject(subCategories.Select(c => c.Title).ToList()));
                 if (subCategories != null)
                 {
                     List<CategoryDto> list = [];
@@ -92,7 +84,7 @@ namespace NewKnowledgeAPI.Q.Categories
 
 
         [HttpGet("{partitionKey}/{id}/{pageSize}/{includeQuestionId}")]
-        [ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id", "pageSize", "includeQuestionId" })]
+        //[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id", "pageSize", "includeQuestionId" })]
         public async Task<IActionResult> GetCategory(string partitionKey, string id, int pageSize, string includeQuestionId)
         {
             try

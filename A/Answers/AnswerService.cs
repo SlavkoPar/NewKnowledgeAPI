@@ -322,7 +322,7 @@ namespace NewKnowledgeAPI.A.Answers
             return new AnswersMore([], false);
         }
 
-        public async Task<List<AnswerRowDto>> GetShortAnswers(List<string> words, int count)
+        public async Task<List<AnswerRowDto>> SearchAnswerRows(List<string> words, int count)
         {
             var myContainer = await container();
             try

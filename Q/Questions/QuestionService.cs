@@ -412,13 +412,14 @@ namespace NewKnowledgeAPI.Q.Questions
             return new QuestionsMore([], false);
         }
 
-        public async Task<List<QuestionRowDto>> GetQuests(List<string> words, int count)
+        public async Task<List<QuestionRowDto>> SearchQuestionRows(List<string> words, int count)
         {
             var myContainer = await container();
             try
             {
                 // order of fields matters
-                var sqlQuery = $"SELECT c.partitionKey, c.id, c.Title, c.ParentCategory  FROM c WHERE c.Type = 'question' AND IS_NULL(c.Archived) AND ";
+                var sqlQuery = $"SELECT c.partitionKey, c.id, c.Title, c.ParentCategory FROM c " +
+                                "WHERE c.Type = 'question' AND IS_NULL(c.Archived) AND ";
                 if (words.Count == 1)
                 {
                     sqlQuery += $" CONTAINS(c.Title, \"{words[0]}\", true) ";
