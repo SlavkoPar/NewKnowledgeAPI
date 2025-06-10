@@ -1,5 +1,10 @@
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.Caching.Memory;
+using OpenAI; // Ensure you have the correct NuGet package installed
+
+// To fix the CS0234 error, you need to install the Azure.AI.OpenAI NuGet package.
+// Run the following command in the Package Manager Console or use the NuGet Package Manager in Visual Studio:
+// Install-Package Azure.AI.OpenAI
 
 namespace NewKnowledgeAPI.Services
 {
