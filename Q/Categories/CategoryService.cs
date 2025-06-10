@@ -1,5 +1,6 @@
 ﻿using Azure;
 using Knowledge.Services;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using NewKnowledgeAPI.Common;
@@ -7,6 +8,7 @@ using NewKnowledgeAPI.Q.Categories.Model;
 using NewKnowledgeAPI.Q.Questions;
 using NewKnowledgeAPI.Q.Questions.Model;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 
@@ -39,56 +41,26 @@ namespace NewKnowledgeAPI.Q.Categories
             Db = db;
         }
 
-        internal async Task<List<CatDto>> GetAllCats()
+        internal async Task<List<CategoryRowDto>> GetAllCats()
         {
             var myContainer = await container();
             var sqlQuery = "SELECT * FROM c WHERE c.Type = 'category' AND IS_NULL(c.Archived) ORDER BY c.Title ASC";
             QueryDefinition queryDefinition = new(sqlQuery);
             FeedIterator<Category> queryResultSetIterator = myContainer.GetItemQueryIterator<Category>(queryDefinition);
             //List<CategoryDto> subCategories = new List<CategoryDto>();
-            List<CatDto> catDtos = [];
+            List<CategoryRowDto> dtos = [];
             while (queryResultSetIterator.HasMoreResults)
             {
                 FeedResponse<Category> currentResultSet = await queryResultSetIterator.ReadNextAsync();
                 foreach (Category category in currentResultSet)
                 {
-                    catDtos.Add(new CatDto(category));
+                    dtos.Add(new CategoryRowDto(new CategoryRow(category)));
                 }
             }
-            return catDtos;
+            return dtos;
         }
+        
 
-
-        internal async Task<List<Category>> GetSubCategories(string PartitionKey, string id)
-        {
-            var myContainer = await container();
-            var sqlQuery = $"SELECT * FROM c WHERE c.Type = 'category' AND IS_NULL(c.Archived) AND "
-            // for categories partitionKey is same as Id
-            //+ (
-            //    PartitionKey == "null"
-            //        ? $""
-            //        : $" c.partitionKey = '{PartitionKey}' AND "  
-            //)
-            + (
-                id == "null"
-                    ? $" IS_NULL(c.ParentCategory)"
-                    : $" c.ParentCategory = '{id}'"
-            );
-            QueryDefinition queryDefinition = new(sqlQuery);
-            FeedIterator<Category> queryResultSetIterator = myContainer!.GetItemQueryIterator<Category>(queryDefinition);
-            //List<CategoryDto> subCategories = new List<CategoryDto>();
-            List<Category> subCategories = [];
-            while (queryResultSetIterator.HasMoreResults)
-            {
-                FeedResponse<Category> currentResultSet = await queryResultSetIterator.ReadNextAsync();
-                foreach (Category category in currentResultSet)
-                {
-                    //subCategories.Add(new CategoryDto(category));
-                    subCategories.Add(category);
-                }
-            }
-            return subCategories;
-        }
 
         public async Task<CategoryEx> GetCategory(CategoryKey categoryKey, bool hidrate, int pageSize, string? includeQuestionId)
         {
@@ -122,7 +94,6 @@ namespace NewKnowledgeAPI.Q.Categories
             }
         }
 
- 
         public async Task<HttpStatusCode> CheckDuplicate(string title, string id) //QuestionData questionData)
         {
             var sqlQuery = "SELECT * FROM c WHERE c.Type = 'category' AND " +
@@ -463,93 +434,7 @@ namespace NewKnowledgeAPI.Q.Categories
             }
             return new CategoryEx(null, msg);
         }
-
-        public async Task<CategoryEx> GetCategoryWithSubCategories(Container container, CategoryKey categoryKey, bool hidrate)
-        {
-            var (PartitionKey, Id) = categoryKey;
-            try
-            {
-                Category category = await container!.ReadItemAsync<Category>(Id, new PartitionKey(PartitionKey));
-                //Console.WriteLine(JsonConvert.SerializeObject(category));
-                List<Category> subCategories = [];
-                if (hidrate)
-                {
-                    subCategories = await GetSubCategories(PartitionKey, Id);
-                    subCategories.ForEach(c => c.SubCategories = []);
-                }
-                category.SubCategories = subCategories; 
-                return new CategoryEx(category, "");
-            }
-            catch (Exception ex)
-            {
-                // Note that after creating the item, we can access the body of the item with the Resource property off the ItemResponse. We can also access the RequestCharge property to see the amount of RUs consumed on this request.
-                Debug.WriteLine(ex.Message);
-                return new CategoryEx(null, ex.Message);
-            }
-        }
-
-
-        public async Task<CategoryEx> GetCatsUpTheTree(CategoryKey categoryKey)
-        {
-            var myContainer = await container();
-            string message = string.Empty;
-            try
-            {
-                string? parentCategory = null;
-                Category? category = null;
-                Category? child = null;
-                do
-                {
-                    var hidrate = category != null;
-                    CategoryEx categoryEx = await GetCategoryWithSubCategories(myContainer, categoryKey, hidrate);
-                    // Console.WriteLine("---------------------------------------------------");
-                    // Console.WriteLine(JsonConvert.SerializeObject(categoryEx)); 
-                    var (cat, msg) = categoryEx;
-                    if (cat != null)
-                    {
-                        cat.IsExpanded = category != null;
-                        //child = cat;
-                        int index = cat.SubCategories!.FindIndex(x => x.Id == child!.Id);
-                        if (index >= 0)
-                        {
-                            cat.SubCategories[index] = child.ShallowCopy();
-                        }
-                        cat.IsExpanded = category != null;
-                        child = cat.ShallowCopy();
-                        parentCategory = cat.ParentCategory!;
-                        // partitionKey is the same as Id
-                        categoryKey = new CategoryKey(parentCategory, parentCategory);
-                        category = cat.DeepCopy();
-                    }
-                    else
-                    {
-                        message = msg;
-                        parentCategory = null;
-                    }
-                } while (parentCategory != null);
-                // put root id to each Category
-                if (category != null) {
-                    SetRootId(category, category.Id);
-                }
-                return new CategoryEx(category, message);
-            }
-            catch (Exception ex)
-            {
-                message = ex.Message;
-                Debug.WriteLine(message);
-            }
-            return new CategoryEx(null, message);
-        }
-
-        void SetRootId(Category cat, string rootId)
-        {
-            cat.RootId = rootId;
-            Debug.Assert(cat.SubCategories != null);
-            cat.SubCategories.ForEach(c => {
-                SetRootId(c, rootId);
-            });
-        }
-
+                    
 
         public void Dispose()
         {

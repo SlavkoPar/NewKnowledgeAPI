@@ -80,7 +80,7 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Variations = variations;
             HasSubCategories = hasSubCategories;
             SubCategories = subCategories ?? [];
-            NumOfQuestions = NumOfQuestions; //questions == null ? 0 : questions.Count;
+            NumOfQuestions = numOfQuestions; //questions == null ? 0 : questions.Count;
             IsExpanded = isExpanded;
             if (questionRows == null)
             {

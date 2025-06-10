@@ -26,50 +26,31 @@ namespace NewKnowledgeAPI.Q.Categories
             Configuration = configuration;
         }
 
-        // GET api/<FamilyController>
-        [HttpGet]
-        //[ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any)] //, VaryByQueryKeys = new[] { "impactlevel", "pii" })]
-        public async Task<IActionResult> GetAllCats()
-        {
-            try
-            {
-                Console.WriteLine("GetAllCats");
-                // using (var db = new Db(this.Configuration))
-                var categoryService = new CategoryService(dbService);
-                List<CatDto> catDtos = await categoryService.GetAllCats();
-                return Ok(catDtos);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+       
 
+        /*
         [HttpGet("{partitionKey}/{id}")]
         //[ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
         public async Task<IActionResult> GetSubCategories(string partitionKey, string id)
         {
             try
             {
-                Console.WriteLine("GetSubCategories {0}/{1}", partitionKey, id); 
+                Console.WriteLine("GetSubCategories {0}/{1}", partitionKey, id);
                 //using (var db = new Db(this.Configuration))
                 //{
                 //    await db.Initialize;
                 //var category = new Category(_Db);
-                //List<Category> subCategories = await category.GetSubCategories(partitionKey, parentCategory);
-                var categoryService = new CategoryService(dbService);
-                List<Category> subCategories = await categoryService.GetSubCategories(partitionKey, id);
-                //Console.WriteLine("PREEEEEEEEEEEEEEEEEEEEEEEE");
+                var categoryRowService = new CategoryRowService(dbService);
+                List<CategoryRow> subCategories = await categoryRowService.GetSubCategories(partitionKey, id);
                 //Console.WriteLine(JsonConvert.SerializeObject(subCategories.Select( c => c.Title).ToList()));
-                subCategories.Sort(Category.Comparer);
-                //Console.WriteLine("POSELEEEEEEEEEEEEEEEEEEEEE");
+                subCategories.Sort(CategoryRow.Comparer);
                 //Console.WriteLine(JsonConvert.SerializeObject(subCategories.Select(c => c.Title).ToList()));
                 if (subCategories != null)
                 {
-                    List<CategoryDto> list = [];
-                    foreach (Category cat in subCategories)
+                    List<CategoryRowDto> list = [];
+                    foreach (CategoryRow cat in subCategories)
                     {
-                        list.Add(new CategoryDto(cat));
+                        list.Add(new CategoryRowDto(cat));
                     }
                     return Ok(list);
                 }
@@ -81,7 +62,7 @@ namespace NewKnowledgeAPI.Q.Categories
                 return BadRequest(ex.Message);
             }
         }
-
+        */
 
         [HttpGet("{partitionKey}/{id}/{pageSize}/{includeQuestionId}")]
         //[ResponseCache(Duration = 60, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id", "pageSize", "includeQuestionId" })]
@@ -116,6 +97,34 @@ namespace NewKnowledgeAPI.Q.Categories
             catch (Exception ex)
             {
                 return BadRequest(new CategoryDtoEx(ex.Message));
+            }
+        }
+
+        [HttpGet("{partitionKey}/{id}/{hidrate}")]
+        //[ResponseCache(Duration = 120, Location = ResponseCacheLocation.Any, VaryByQueryKeys = new[] { "partitionKey", "id" })]
+        public async Task<IActionResult> GetCategoryHidrated(string partitionKey, string id, bool hidrate)
+        {
+            // hidrate collections except questions
+            try
+            {
+                CategoryKey categoryKey = new(partitionKey, id);
+                // TODO what does  /partitionKey mean?
+                //using (var db = new Db(this.Configuration))
+                //{
+                //await db.Initialize;
+                //var category = new Category(db);
+                var categoryService = new CategoryService(dbService);
+                CategoryEx categoryEx = await categoryService.GetCategory(categoryKey, hidrate, 0, null);
+                if (categoryEx.category != null)
+                {
+                    return Ok(new CategoryDtoEx(categoryEx));
+                }
+                //}
+                return NotFound(new CategoryDtoEx(categoryEx));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
             }
         }
 
