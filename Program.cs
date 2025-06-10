@@ -108,6 +108,9 @@ builder.Services.AddMemoryCache();
 
 builder.Services.AddResponseCaching();
 
+builder.Services.AddSingleton<IOpenAIEmbeddingService, OpenAIEmbeddingService>();
+builder.Services.AddSingleton<IVectorSearchService, VectorSearchService>();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -134,6 +137,9 @@ app.UseResponseCaching();
 app.UseAuthentication();
 //app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthorization();
+
+var vectorSearchService = app.Services.GetRequiredService<IVectorSearchService>();
+await vectorSearchService.InitializeAsync();
 
 app.MapControllers();
 
