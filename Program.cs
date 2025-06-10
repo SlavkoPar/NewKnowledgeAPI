@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Identity.Web;
 using Microsoft.IdentityModel.Logging;
+using NewKnowledgeAPI.Services;
 
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins"; // TODO ubaci u controller
 
