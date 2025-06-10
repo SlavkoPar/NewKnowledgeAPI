@@ -6,14 +6,16 @@ using System;
 
 namespace NewKnowledgeAPI.Q.Categories.Model
 {
-    public class CatDto: IDisposable
+    public class CategoryRowDto: IDisposable
     {
         public string PartitionKey { get; set; }
         public string Id { get; set; }
+        public string? RootId { get; set; }
+        public string ParentCategory { get; set; }
+
         public string Title { get; set; }
 
         public int Kind { get; set; }
-        public string ParentCategory { get; set; }
         public int Level { get; set; }
         public int NumOfQuestions { get; set; }
         public bool HasSubCategories { get; set; }
@@ -21,11 +23,14 @@ namespace NewKnowledgeAPI.Q.Categories.Model
         public string Header { get; set; }
         public List<string>? Variations { get; set; }
 
-        public CatDto(Category category)
+        public List<CategoryRowDto>? SubCategories { get; set; }
+        public bool? IsExpanded { get; set; }
+
+        public CategoryRowDto(CategoryRow categoryRow)
         {
             var (partitionKey, id, parentCategory, title, link, header, level, kind,
-                hasSubCategories, _,
-                hasMoreQuestions, numOfQuestions, _, variations, _, rootId) = category;
+                hasSubCategories, subCategories,
+                hasMoreQuestions, numOfQuestions, _, variations, isExpanded, rootId) = categoryRow;
             Id = id;
             PartitionKey = partitionKey;
             Title = title;
@@ -34,11 +39,13 @@ namespace NewKnowledgeAPI.Q.Categories.Model
             Level = level;
             NumOfQuestions = numOfQuestions;
             HasSubCategories = hasSubCategories;
+            SubCategories = subCategories.Select(row => new CategoryRowDto(row)).ToList();
             Variations = variations ?? [];
             Link = link;
             Header = header;
+            IsExpanded = isExpanded;
+            RootId = rootId;
         }
-        
 
         public void Dispose()
         {
